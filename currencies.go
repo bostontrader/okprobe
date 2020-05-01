@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func ProbeWallet(urlBase, keyFile string) {
+func ProbeCurrencies(urlBase string, keyFile string) {
 
-	endpoint := "/api/account/v3/wallet"
+	endpoint := "/api/account/v3/currencies"
 	url := urlBase + endpoint
 
 	c1 := GetClient(urlBase)
@@ -65,7 +65,7 @@ func ProbeWallet(urlBase, keyFile string) {
 	var obj APIKey
 	data, err := ioutil.ReadFile(keyFile)
 	if err != nil {
-		panic(err)
+		fmt.Print(err)
 	}
 
 	err = json.Unmarshal(data, &obj)
@@ -108,16 +108,16 @@ func ProbeWallet(urlBase, keyFile string) {
 	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
 	extraExpectedResponseHeaders := map[string]string{
 		"Strict-Transport-Security": "",
+		"Vary":                      "",
 	}
-
 	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	walletEntries := make([]utils.WalletEntry, 0)
+	currenciesEntries := make([]utils.CurrenciesEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&walletEntries)
+	err = dec.Decode(&currenciesEntries)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&walletEntries)
-	fmt.Println(reflect.TypeOf(walletEntries))
+	fmt.Println(&currenciesEntries)
+	fmt.Println(reflect.TypeOf(currenciesEntries))
 }

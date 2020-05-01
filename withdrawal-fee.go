@@ -3,16 +3,24 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+
+	//"crypto/hmac"
+	//"crypto/sha256"
+	//"encoding/base64"
+	//"encoding/json"
+	//"fmt"
 	"github.com/bostontrader/okcommon"
 	"io/ioutil"
+
+	//"io/ioutil"
 	"net/http"
-	"reflect"
 	"time"
 )
 
-func ProbeWallet(urlBase, keyFile string) {
+func ProbeWithdrawalFee(urlBase string, keyFile string) {
 
-	endpoint := "/api/account/v3/wallet"
+	endpoint := "/api/account/v3/withdrawal/fee"
 	url := urlBase + endpoint
 
 	c1 := GetClient(urlBase)
@@ -65,7 +73,7 @@ func ProbeWallet(urlBase, keyFile string) {
 	var obj APIKey
 	data, err := ioutil.ReadFile(keyFile)
 	if err != nil {
-		panic(err)
+		fmt.Print(err)
 	}
 
 	err = json.Unmarshal(data, &obj)
@@ -96,12 +104,32 @@ func ProbeWallet(urlBase, keyFile string) {
 	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
 	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
 
-	// The final correct request must have a valid signature, so build one now.
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	prehash := timestamp + "GET" + endpoint
-	encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+	// Requests after this point require a valid signature.
 
-	req, err = http.NewRequest("GET", url, nil)
+	// 10. Extraneous parameters appear to be ignored, the full list is returned, and two extra headers appear: Vary and Strict-Transport-Security.  Status = 200.  For example: ?catfood and ?catfood=yum.
+	// But this is of minimal importance so don't bother trying to test for this.  We certainly don't care to mimic this behavior in the catbox.
+
+	// 11. Request an invalid currency
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	invalid_param := "catfood"
+	params := "?currency=" + invalid_param
+	prehash := timestamp + "GET" + endpoint + params
+	fmt.Println("prehash: ", prehash)
+	encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+	req, err = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", obj.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30031(invalid_param), 400)
+
+	// 12. Request a single valid currency
+	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	valid_param := "BTC"
+	params = "?currency=" + valid_param
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+	req, err = http.NewRequest("GET", url+params, nil)
 	req.Header.Add("OK-ACCESS-KEY", obj.Key)
 	req.Header.Add("OK-ACCESS-SIGN", encoded)
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
@@ -109,15 +137,50 @@ func ProbeWallet(urlBase, keyFile string) {
 	extraExpectedResponseHeaders := map[string]string{
 		"Strict-Transport-Security": "",
 	}
-
 	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	walletEntries := make([]utils.WalletEntry, 0)
+	withdrawlFees := make([]utils.WithdrawalFee, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&walletEntries)
+	err = dec.Decode(&withdrawlFees)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&walletEntries)
-	fmt.Println(reflect.TypeOf(walletEntries))
+	fmt.Println(&withdrawlFees)
+	fmt.Println(reflect.TypeOf(withdrawlFees))
+
+	// 13. Don't request any currency, so by default get them all
+	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	prehash = timestamp + "GET" + endpoint
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+	req, err = http.NewRequest("GET", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", obj.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
+	extraExpectedResponseHeaders = map[string]string{
+		"Strict-Transport-Security": "",
+		"Vary":                      "",
+	}
+	body = Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	withdrawlFees = make([]utils.WithdrawalFee, 0)
+	dec = json.NewDecoder(body)
+	dec.DisallowUnknownFields()
+	err = dec.Decode(&withdrawlFees)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(&withdrawlFees)
+	fmt.Println(reflect.TypeOf(withdrawlFees))
+}
+
+func catMap(a, b map[string]string) map[string]string {
+	var n = map[string]string{}
+	for k, v := range a {
+		n[k] = v
+	}
+	for k, v := range b {
+		n[k] = v
+	}
+
+	return n
 }
