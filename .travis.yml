@@ -1,0 +1,6 @@
+language: go
+
+script:
+  go get okcatbox
+  okcatbox
+  ./okprobe -url http://localhost:8090 -endpnt withdrawal-fee -keyfile  okcatbox-read.json

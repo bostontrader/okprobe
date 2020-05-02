@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/bostontrader/okprobe.svg?branch=master)](https://travis-ci.org/bostontrader/okprobe)
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+
 # Welcome to OKProbe
 The purpose of OKProbe is to probe the OKEx API using a variety of correct and incorrect methods in order to observe its behavior.
 
@@ -30,6 +33,10 @@ The problem is not so much that OKEx will retaliate against your real credential
 
 Another solution is to use a simulated OKEx server for your Probing needs.  We happen to know of one at https://github.com/bostontrader/OKCatbox.  With the OKCatbox you can create your own credentials that you can freely use with the OKProbe.  This will give you a reasonable first sense of correct operation of your code, before the time comes to really unleash it upon the real OKEx API.  Please realize that the credentials created by the OKCatbox are in no way connected to your real credentials and cannot be used on the real OKEx API.
 
-## Limits of Testing
+## Testing
+
+Automated testing works by installing [OKCatbox](https://github.com/bostontrader/okcatbox) on the CI server and executing the probes against that.  Doing this has the pleasant side effect of testing OKCatbox as well.
+
+### Limits of Testing
 
 An important limitation of these tests is that we don't carefully inspect the 200 type results.  There are issues with doing so that are too tedious to even describe here, much less implement in the software.  There is another layer of testing that starts with a blank db, submits API calls, and examines the specific correct responses at that time.  This is the suitable place for such testing.
