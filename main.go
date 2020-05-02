@@ -24,6 +24,8 @@ func main() {
 	switch *endPtr {
 	case "currencies":
 		ProbeCurrencies(*urlPtr, *keyFilePtr)
+	case "deposit-address":
+		ProbeDepositAddress(*urlPtr, *keyFilePtr)
 	case "wallet":
 		ProbeWallet(*urlPtr, *keyFilePtr)
 	case "withdrawal-fee":

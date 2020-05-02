@@ -1,6 +1,11 @@
 language: go
 
-script:
+go:
+  - 1.14.x
+
+install:
   go get okcatbox
   okcatbox
+
+script:
   ./okprobe -url http://localhost:8090 -endpnt withdrawal-fee -keyfile  okcatbox-read.json

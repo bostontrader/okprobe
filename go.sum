@@ -8,3 +8,7 @@ github.com/bostontrader/okcommon v0.0.0-20200501103649-025d721ad27e h1:YojZTD/O1
 github.com/bostontrader/okcommon v0.0.0-20200501103649-025d721ad27e/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
 github.com/bostontrader/okcommon v0.0.0-20200501224119-16ca216456ab h1:4UaeGc+fZL9j6131LTuyhBuPk4BmSnxqSCb0ktF0ONQ=
 github.com/bostontrader/okcommon v0.0.0-20200501224119-16ca216456ab/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
+github.com/bostontrader/okcommon v0.0.0-20200502220647-9f99c6719dcd h1:jBEqJ3RcToHACMQv5/buFjR/oDYbC5l9J4GqmglwHtU=
+github.com/bostontrader/okcommon v0.0.0-20200502220647-9f99c6719dcd/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
+github.com/bostontrader/okcommon v0.0.0-20200502221825-adb7324f4bbe h1:f/aaOrI7Ub2iO069bakTMTTU4cHNwkrZNeAkmmnfCzM=
+github.com/bostontrader/okcommon v0.0.0-20200502221825-adb7324f4bbe/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
