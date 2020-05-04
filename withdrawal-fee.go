@@ -22,55 +22,13 @@ func ProbeWithdrawalFee(urlBase string, keyFile string) {
 
 	endpoint := "/api/account/v3/withdrawal/fee"
 	url := urlBase + endpoint
+	client := GetClient(urlBase)
 
-	c1 := GetClient(urlBase)
-	client := &c1
-
-	// 1.
-	req, _ := http.NewRequest("GET", url, nil)
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30001(), 401) // OK-ACCESS-KEY header is required
-
-	// 2.
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30002(), 400) // OK-ACCESS-SIGN header is required
-
-	// 3.
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30003(), 400) // OK-ACCESS-TIMESTAMP header is required
-
-	// 4.
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30005(), 400) // Invalid OK-ACCESS-TIMESTAMP
-
-	time.Sleep(1 * time.Second) // limit 6/sec
-
-	// 5.
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z")            // expired
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30008(), 400) // Request timestamp expired
-
-	// 6. Set a good time stamp.  The system time is probably close enough to the server to work.  Maybe try to probe how far off the time can be.
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
+	TestitStd(client, url)
 
 	// In order to proceed we need to get real credentials.  Read them from a file.
-	type APIKey struct {
-		Key        string `json:"api_key"`
-		SecretKey  string `json:"api_secret_key"`
-		Passphrase string `json:"passphrase"`
-	}
-	var obj APIKey
+	var obj utils.Credentials
+
 	data, err := ioutil.ReadFile(keyFile)
 	if err != nil {
 		fmt.Print(err)
@@ -82,7 +40,7 @@ func ProbeWithdrawalFee(urlBase string, keyFile string) {
 	}
 
 	// 7.
-	req, err = http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", obj.Key)
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
@@ -114,7 +72,6 @@ func ProbeWithdrawalFee(urlBase string, keyFile string) {
 	invalid_param := "catfood"
 	params := "?currency=" + invalid_param
 	prehash := timestamp + "GET" + endpoint + params
-	fmt.Println("prehash: ", prehash)
 	encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
 	req, err = http.NewRequest("GET", url+params, nil)
 	req.Header.Add("OK-ACCESS-KEY", obj.Key)

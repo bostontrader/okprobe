@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func GetClient(urlBase string) (client http.Client) {
+func GetClient(urlBase string) (client *http.Client) {
 
 	if len(urlBase) >= 6 && urlBase[:6] == "https:" {
 		tr := &http.Transport{
@@ -13,9 +13,9 @@ func GetClient(urlBase string) (client http.Client) {
 			IdleConnTimeout:    30 * time.Second,
 			DisableCompression: true,
 		}
-		return http.Client{Transport: tr}
+		return &http.Client{Transport: tr}
 	}
 
-	return http.Client{}
+	return &http.Client{}
 
 }
