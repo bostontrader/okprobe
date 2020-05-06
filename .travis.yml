@@ -5,8 +5,10 @@ go:
 
 install:
   - go get github.com/bostontrader/okcatbox
-  - go run github.com/bostontrader/okcatbox
+  - go run github.com/bostontrader/okcatbox &
 
 script:
+  - git clone https://github.com/bostontrader/okprobe
+  - cd okprobe
   - go build
-  - ./okprobe -url http://localhost:8090 -endpnt withdrawal-fee -keyfile  okcatbox-read.json
+  - ./okprobe -url http://localhost:8090 -endpnt wallet -keyfile  okcatbox-read.json
