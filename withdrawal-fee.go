@@ -3,28 +3,22 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
-
-	//"crypto/hmac"
-	//"crypto/sha256"
-	//"encoding/base64"
-	//"encoding/json"
-	//"fmt"
 	"github.com/bostontrader/okcommon"
 	"io/ioutil"
-
-	//"io/ioutil"
 	"net/http"
+	"reflect"
 	"time"
 )
 
-func ProbeWithdrawalFee(urlBase string, keyFile string) {
+func ProbeWithdrawalFee(urlBase string, keyFile string, makeErrors bool) {
 
 	endpoint := "/api/account/v3/withdrawal/fee"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 
-	TestitStd(client, url)
+	if makeErrors {
+		TestitStd(client, url)
+	}
 
 	// In order to proceed we need to get real credentials.  Read them from a file.
 	var obj utils.Credentials
@@ -39,54 +33,58 @@ func ProbeWithdrawalFee(urlBase string, keyFile string) {
 		panic(err)
 	}
 
-	// 7.
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", obj.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
+	if makeErrors {
+		// 7.
+		req, _ := http.NewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", obj.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
 
-	// 8.
-	req, err = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", obj.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
+		// 8.
+		req, err = http.NewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", obj.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
 
-	// 9.
-	req, err = http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", obj.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
+		// 9.
+		req, err = http.NewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", obj.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
+	}
 
 	// Requests after this point require a valid signature.
 
 	// 10. Extraneous parameters appear to be ignored, the full list is returned, and two extra headers appear: Vary and Strict-Transport-Security.  Status = 200.  For example: ?catfood and ?catfood=yum.
 	// But this is of minimal importance so don't bother trying to test for this.  We certainly don't care to mimic this behavior in the catbox.
 
-	// 11. Request an invalid currency
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	invalid_param := "catfood"
-	params := "?currency=" + invalid_param
-	prehash := timestamp + "GET" + endpoint + params
-	encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
-	req, err = http.NewRequest("GET", url+params, nil)
-	req.Header.Add("OK-ACCESS-KEY", obj.Key)
-	req.Header.Add("OK-ACCESS-SIGN", encoded)
-	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-	req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30031(invalid_param), 400)
+	if makeErrors {
+		// 11. Request an invalid currency
+		timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		invalid_param := "catfood"
+		params := "?currency=" + invalid_param
+		prehash := timestamp + "GET" + endpoint + params
+		encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+		req, _ := http.NewRequest("GET", url+params, nil)
+		req.Header.Add("OK-ACCESS-KEY", obj.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", obj.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30031(invalid_param), 400)
+	}
 
 	// 12. Request a single valid currency
-	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
 	valid_param := "BTC"
-	params = "?currency=" + valid_param
-	prehash = timestamp + "GET" + endpoint + params
-	encoded, _ = utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
-	req, err = http.NewRequest("GET", url+params, nil)
+	params := "?currency=" + valid_param
+	prehash := timestamp + "GET" + endpoint + params
+	encoded, _ := utils.HmacSha256Base64Signer(prehash, obj.SecretKey)
+	req, err := http.NewRequest("GET", url+params, nil)
 	req.Header.Add("OK-ACCESS-KEY", obj.Key)
 	req.Header.Add("OK-ACCESS-SIGN", encoded)
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
