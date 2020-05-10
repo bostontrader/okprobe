@@ -15,29 +15,29 @@ import (
 /*
 Every API call has a standard sequence of errors submitted.
 */
-func TestitStd(client *http.Client, url string, credentials utils.Credentials) {
+func TestitStd(client *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) {
 
 	// 1.
 	req, _ := http.NewRequest("GET", url, nil)
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30001(), 401) // OK-ACCESS-KEY header is required
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30001(), 401) // OK-ACCESS-KEY header is required
 
 	// 2.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30002(), 400) // OK-ACCESS-SIGN header is required
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30002(), 400) // OK-ACCESS-SIGN header is required
 
 	// 3.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30003(), 400) // OK-ACCESS-TIMESTAMP header is required
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30003(), 400) // OK-ACCESS-TIMESTAMP header is required
 
 	// 4.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30005(), 400) // Invalid OK-ACCESS-TIMESTAMP
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30005(), 400) // Invalid OK-ACCESS-TIMESTAMP
 
 	time.Sleep(1 * time.Second) // limit 6/sec
 
@@ -45,22 +45,22 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials) {
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z")            // expired
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30008(), 400) // Request timestamp expired
+	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z")      // expired
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30008(), 400) // Request timestamp expired
 
 	// 6. Set a good time stamp.  The system time is probably close enough to the server to work.  Maybe try to probe how far off the time can be.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
 
 	// 7.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
 
 	// 8.
 	req, _ = http.NewRequest("GET", url, nil)
@@ -68,7 +68,7 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials) {
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
 
 	// 9.
 	req, _ = http.NewRequest("GET", url, nil)
@@ -76,7 +76,7 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials) {
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
 
 }
 
@@ -99,7 +99,7 @@ func Testit200(
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders, req)
+	compareHeaders(resp.Header, expectedResponseHeaders, req, "tag200")
 
 	// Read the body into a []byte and then create a return a new io.Reader using this []byte.  This enables us to close resp.Body, which we must do, and return an io.Reader which the caller needs in order to Decode JSON.
 	body, err := ioutil.ReadAll(resp.Body)
@@ -146,20 +146,20 @@ func Testit4xx(
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders, req)
+	compareHeaders(resp.Header, expectedResponseHeaders, req, "tag4xx")
 
 	return
 }
 
 // Did we receive all the headers we expected? Did we expect all that we received?
-func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request) {
+func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request, tag string) {
 	// Look for all of the expected headers in received headers.
 	for key, _ := range expectedResponseHeaders {
 		_, ok := respHeaders[key]
 		if ok {
 			// expected and present, cool
 		} else {
-			fmt.Println("KeyE2:", key, " expected, but not present.")
+			fmt.Println(req.URL, tag, key, " expected, but not present.")
 		}
 	}
 
@@ -169,7 +169,7 @@ func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map
 		if ok {
 			// received and expected, cool
 		} else {
-			fmt.Println("KeyR2:", key, " present, but not expected.")
+			fmt.Println(req.URL, tag, key, " present, but not expected.")
 		}
 	}
 }

@@ -11,8 +11,14 @@ script:
   - git clone https://github.com/bostontrader/okprobe
   - cd okprobe
   - go build
+
+  # funding
   - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt currencies
   - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt deposit-address
   - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt deposit-history
   - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt wallet
   - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt withdrawal-fee
+
+  # spot
+  - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt accounts
+

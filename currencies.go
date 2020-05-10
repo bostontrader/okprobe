@@ -17,7 +17,7 @@ func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
 	credentials := getCredentials(keyFile)
 
 	if makeErrors {
-		TestitStd(client, url, credentials)
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
 	}
 
 	// The final correct request must have a valid signature, so build one now.

@@ -34,7 +34,7 @@ func ProbeDepositHistory(urlBase string, keyFile string, makeErrors bool) {
 	credentials := getCredentials(keyFile)
 
 	if makeErrors {
-		TestitStd(client, url, credentials)
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
 	}
 
 	// Requests after this point require a valid signature.

@@ -29,7 +29,8 @@ func main() {
 	fmt.Println("url:", *urlPtr)
 
 	switch *endPtr {
-
+	case "accounts":
+		ProbeAccounts(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "currencies":
 		ProbeCurrencies(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "deposit-address":

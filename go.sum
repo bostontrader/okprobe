@@ -16,3 +16,5 @@ github.com/bostontrader/okcommon v0.0.0-20200505233454-cbb5f7efc5a5 h1:d5COZEju/
 github.com/bostontrader/okcommon v0.0.0-20200505233454-cbb5f7efc5a5/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
 github.com/bostontrader/okcommon v0.0.0-20200506000235-ff23df19bfaf h1:+HLprL4TIZ1GFGofab84IuhUc1A3zmBrp/hiFbkfSWM=
 github.com/bostontrader/okcommon v0.0.0-20200506000235-ff23df19bfaf/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
+github.com/bostontrader/okcommon v0.0.0-20200510234536-a48afdd2825d h1:RNDBuDAPqVp/LwfzK40PRzLTtId7R0d4TSIlS/NGC+o=
+github.com/bostontrader/okcommon v0.0.0-20200510234536-a48afdd2825d/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=

@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-func ProbeWallet(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccounts(urlBase, keyFile string, makeErrors bool) {
 
-	endpoint := "/api/account/v3/wallet"
+	endpoint := "/api/spot/v3/accounts"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 	credentials := getCredentials(keyFile)
 
 	if makeErrors {
-		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeadersB)
 	}
 
 	// The final correct request must have a valid signature, so build one now.
@@ -32,16 +32,27 @@ func ProbeWallet(urlBase, keyFile string, makeErrors bool) {
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 	extraExpectedResponseHeaders := map[string]string{
 		"Strict-Transport-Security": "",
+		"Vary":                      "",
 	}
 
-	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	walletEntries := make([]utils.WalletEntry, 0)
+	body := Testit200(client, req, catMap(utils.ExpectedResponseHeadersB, extraExpectedResponseHeaders))
+	accountsEntries := make([]AccountsEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&walletEntries)
+	err = dec.Decode(&accountsEntries)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&walletEntries)
-	fmt.Println(reflect.TypeOf(walletEntries))
+	fmt.Println(&accountsEntries)
+	fmt.Println(reflect.TypeOf(accountsEntries))
+}
+
+type AccountsEntry struct {
+	AccountID  string `json:"id"`
+	Available  string `json:"available"`
+	Balance    string `json:"balance"`
+	CurrencyID string `json:"currency"`
+	Frozen     string `json:"frozen"`
+	Hold       string `json:"hold"`
+	Holds      string `json:"holds"`
 }
