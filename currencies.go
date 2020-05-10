@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
@@ -15,22 +14,10 @@ func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
 	endpoint := "/api/account/v3/currencies"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
+	obj := getCredentials(keyFile)
 
 	if makeErrors {
 		TestitStd(client, url)
-	}
-
-	// In order to proceed we need to get real credentials.  Read them from a file.
-	var obj utils.Credentials
-
-	data, err := ioutil.ReadFile(keyFile)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	err = json.Unmarshal(data, &obj)
-	if err != nil {
-		panic(err)
 	}
 
 	// 7.
@@ -42,7 +29,7 @@ func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
 		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
 
 		// 8.
-		req, err = http.NewRequest("GET", url, nil)
+		req, _ = http.NewRequest("GET", url, nil)
 		req.Header.Add("OK-ACCESS-KEY", obj.Key)
 		req.Header.Add("OK-ACCESS-SIGN", "wrong")
 		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
@@ -50,7 +37,7 @@ func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
 		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
 
 		// 9.
-		req, err = http.NewRequest("GET", url, nil)
+		req, _ = http.NewRequest("GET", url, nil)
 		req.Header.Add("OK-ACCESS-KEY", obj.Key)
 		req.Header.Add("OK-ACCESS-SIGN", "wrong")
 		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))

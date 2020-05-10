@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	utils "github.com/bostontrader/okcommon"
+	"io/ioutil"
 	"os"
 )
 
@@ -26,6 +29,7 @@ func main() {
 	fmt.Println("url:", *urlPtr)
 
 	switch *endPtr {
+
 	case "currencies":
 		ProbeCurrencies(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "deposit-address":
@@ -40,4 +44,17 @@ func main() {
 	default:
 		fmt.Println("Unknown endpoint ", *endPtr)
 	}
+}
+
+func getCredentials(keyFile string) utils.Credentials {
+	var obj utils.Credentials
+	data, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(data, &obj)
+	if err != nil {
+		panic(err)
+	}
+	return obj
 }
