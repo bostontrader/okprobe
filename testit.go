@@ -15,7 +15,7 @@ import (
 /*
 Every API call has a standard sequence of errors submitted.
 */
-func TestitStd(client *http.Client, url string) {
+func TestitStd(client *http.Client, url string, credentials utils.Credentials) {
 
 	// 1.
 	req, _ := http.NewRequest("GET", url, nil)
@@ -54,6 +54,30 @@ func TestitStd(client *http.Client, url string) {
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
+
+	// 7.
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
+
+	// 8.
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
+	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
+
+	// 9.
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
+
 }
 
 /*
@@ -75,7 +99,7 @@ func Testit200(
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders)
+	compareHeaders(resp.Header, expectedResponseHeaders, req)
 
 	// Read the body into a []byte and then create a return a new io.Reader using this []byte.  This enables us to close resp.Body, which we must do, and return an io.Reader which the caller needs in order to Decode JSON.
 	body, err := ioutil.ReadAll(resp.Body)
@@ -112,26 +136,23 @@ func Testit4xx(
 		fmt.Println("error:\nexpected= ", expectedStatusCode, "\nreceived=", resp.StatusCode)
 	}
 
-	if resp.StatusCode == 200 {
-	} else {
-		var obj utils.OKError
-		err = json.Unmarshal(body, &obj)
-		if err != nil {
-			panic(err)
-		}
-		if !reflect.DeepEqual(obj, expectedErrorMessage) {
-			fmt.Println("error:\nexpected=", expectedErrorMessage, "\nreceived=", obj)
-		}
+	var obj utils.OKError
+	err = json.Unmarshal(body, &obj)
+	if err != nil {
+		panic(err)
+	}
+	if !reflect.DeepEqual(obj, expectedErrorMessage) {
+		fmt.Println("error:\nexpected=", expectedErrorMessage, "\nreceived=", obj)
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders)
+	compareHeaders(resp.Header, expectedResponseHeaders, req)
 
 	return
 }
 
 // Did we receive all the headers we expected? Did we expect all that we received?
-func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string) {
+func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request) {
 	// Look for all of the expected headers in received headers.
 	for key, _ := range expectedResponseHeaders {
 		_, ok := respHeaders[key]
