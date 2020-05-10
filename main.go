@@ -58,3 +58,15 @@ func getCredentials(keyFile string) utils.Credentials {
 	}
 	return obj
 }
+
+func catMap(a, b map[string]string) map[string]string {
+	var n = map[string]string{}
+	for k, v := range a {
+		n[k] = v
+	}
+	for k, v := range b {
+		n[k] = v
+	}
+
+	return n
+}
