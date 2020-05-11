@@ -53,7 +53,7 @@ func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool) {
 
 	// 13. Request a valid currency
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	valid_param := "BSV"
+	valid_param := "BTC"
 	params := "?currency=" + valid_param
 	prehash := timestamp + "GET" + endpoint + params
 	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
