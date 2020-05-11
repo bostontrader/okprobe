@@ -36,7 +36,7 @@ func ProbeAccounts(urlBase, keyFile string, makeErrors bool) {
 	}
 
 	body := Testit200(client, req, catMap(utils.ExpectedResponseHeadersB, extraExpectedResponseHeaders))
-	accountsEntries := make([]AccountsEntry, 0)
+	accountsEntries := make([]utils.AccountsEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
 	err = dec.Decode(&accountsEntries)
@@ -45,14 +45,4 @@ func ProbeAccounts(urlBase, keyFile string, makeErrors bool) {
 	}
 	fmt.Println(&accountsEntries)
 	fmt.Println(reflect.TypeOf(accountsEntries))
-}
-
-type AccountsEntry struct {
-	AccountID  string `json:"id"`
-	Available  string `json:"available"`
-	Balance    string `json:"balance"`
-	CurrencyID string `json:"currency"`
-	Frozen     string `json:"frozen"`
-	Hold       string `json:"hold"`
-	Holds      string `json:"holds"`
 }
