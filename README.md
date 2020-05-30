@@ -15,7 +15,7 @@ When executed without any command line params it will print a help screen.
 A functioning example:
 
 ```
-./okprobe -url https://www.okex.com -endpnt wallet -errors = true -keyfile /home/myhome/okex-read.json
+./okprobe -url https://www.okex.com -endpnt wallet -errors -keyfile /home/myhome/okex-read.json
 
 ```
 This command will invoke the Probe on the given url and request the wallet endpnt.  Consider that the Probe knows the actual URL path in order to this, we're not specifying that anywhere here. The command also specifies that a variety of errors be intentionally created in the calls.  Finally, notice the use of a file to hold the API credentials. Speaking of...

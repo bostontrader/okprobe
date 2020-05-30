@@ -29,8 +29,8 @@ func main() {
 	fmt.Println("url:", *urlPtr)
 
 	switch *endPtr {
-	case "accounts":
-		ProbeAccounts(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+
+	// funding
 	case "currencies":
 		ProbeCurrencies(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "deposit-address":
@@ -41,6 +41,14 @@ func main() {
 		ProbeWallet(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "withdrawal-fee":
 		ProbeWithdrawalFee(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+
+	// spot
+	case "accounts":
+		ProbeAccounts(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+	//case "get-orders":
+	//ProbeGetOrders(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+	//case "post-orders":
+	//ProbePostOrders(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 
 	default:
 		fmt.Println("Unknown endpoint ", *endPtr)

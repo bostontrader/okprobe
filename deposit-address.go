@@ -35,7 +35,7 @@ func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool) {
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30023(), 400)
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30023("currency cannot be blank"), 400)
 
 		// 12. Request an invalid currency
 		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")

@@ -127,6 +127,7 @@ func Testit4xx(
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	resp.Body.Close()
 	if err != nil {
 		panic(err)

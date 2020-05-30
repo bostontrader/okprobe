@@ -12,13 +12,17 @@ script:
   - cd okprobe
   - go build
 
+  # Test using an OKCatbox, not a real OKEx server
+  - CATBOX_URL=http://localhost:8090
+  - CATBOX_CREDENTIALS=okcatbox-read.json
+
   # funding
-  - ./okprobe -url http://localhost:8090 -errors -keyfile okcatbox-read.json -endpnt currencies
-  - ./okprobe -url http://localhost:8090 -errors -keyfile okcatbox-read.json -endpnt deposit-address
-  - ./okprobe -url http://localhost:8090 -errors -keyfile okcatbox-read.json -endpnt deposit-history
-  - ./okprobe -url http://localhost:8090 -errors -keyfile okcatbox-read.json -endpnt wallet
-  - ./okprobe -url http://localhost:8090 -errors -keyfile okcatbox-read.json -endpnt withdrawal-fee
+  - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt currencies
+  - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt deposit-address
+  - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt deposit-history
+  - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt wallet
+  - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt withdrawal-fee
 
   # spot
-  - ./okprobe -url http://localhost:8090 -keyfile okcatbox-read.json -errors -endpnt accounts
+  - ./okprobe -url $CATBOX_URL -keyfile $CATBOX_CREDENTIALS -errors -endpnt accounts
 
