@@ -1,15 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
 )
 
-func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool) {
+func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool, query string) {
 
 	endpoint := "/api/account/v3/deposit/address"
 	url := urlBase + endpoint
@@ -51,13 +53,11 @@ func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool) {
 		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30031(invalid_param), 400)
 	}
 
-	// 13. Request a valid currency
+	// 13. Try to submit a valid request by feeding a query string.
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	valid_param := "BTC"
-	params := "?currency=" + valid_param
-	prehash := timestamp + "GET" + endpoint + params
+	prehash := timestamp + "GET" + endpoint + query
 	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
-	req, err := http.NewRequest("GET", url+params, nil)
+	req, err := http.NewRequest("GET", url+query, nil)
 	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
 	req.Header.Add("OK-ACCESS-SIGN", encoded)
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
@@ -66,13 +66,20 @@ func ProbeDepositAddress(urlBase string, keyFile string, makeErrors bool) {
 		"Strict-Transport-Security": "",
 	}
 	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	depositAddress := make([]utils.DepositAddress, 0)
-	dec := json.NewDecoder(body)
-	dec.DisallowUnknownFields()
-	err = dec.Decode(&depositAddress)
+	bodyString, err := ioutil.ReadAll(body)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&depositAddress)
-	fmt.Println(reflect.TypeOf(depositAddress))
+
+	depositAddress := make([]utils.DepositAddress, 0)
+	dec := json.NewDecoder(bytes.NewReader(bodyString))
+	dec.DisallowUnknownFields()
+	err = dec.Decode(&depositAddress)
+	if err == nil {
+		fmt.Println(&depositAddress)
+		fmt.Println(reflect.TypeOf(depositAddress))
+	} else {
+		fmt.Println(string(bodyString))
+	}
+
 }

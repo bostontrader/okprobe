@@ -14,18 +14,21 @@ func main() {
 	endPtr := flag.String("endpnt", "wallet", "The name of the endpoint to invoke")
 	keyFilePtr := flag.String("keyfile", "/path/to/apikeys.json", "The name of a file that contains the API keys")
 	makeErrorsPtr := flag.Bool("errors", false, "Invoke the API calls using intentional errors.")
-
+	queryPtr := flag.String("query", "", "The query string to send to the server with GET requests.  For example: '?a=good&b=better'")
 	urlPtr := flag.String("url", "https://www.okex.com", "The URL of the API")
 
-	if len(os.Args) < 2 {
+	// Args[0] is okprobe
+	if len(os.Args) <= 1 {
 		flag.Usage()
+		return
 	}
 
 	flag.Parse()
 	fmt.Println("Invoking the Probe with the following configuration:")
 	fmt.Println("endpnt:", *endPtr)
-	fmt.Println("keyfile:", *keyFilePtr)
 	fmt.Println("errors:", *makeErrorsPtr)
+	fmt.Println("keyfile:", *keyFilePtr)
+	fmt.Println("query:", *queryPtr)
 	fmt.Println("url:", *urlPtr)
 
 	switch *endPtr {
@@ -34,7 +37,7 @@ func main() {
 	case "currencies":
 		ProbeCurrencies(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "deposit-address":
-		ProbeDepositAddress(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+		ProbeDepositAddress(*urlPtr, *keyFilePtr, *makeErrorsPtr, *queryPtr)
 	case "deposit-history":
 		ProbeDepositHistory(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "wallet":
