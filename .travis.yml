@@ -3,18 +3,15 @@ language: go
 go:
   - 1.14.x
 
-install:
-  - go get github.com/bostontrader/okcatbox
-  - go run github.com/bostontrader/okcatbox &
-
 script:
   - git clone https://github.com/bostontrader/okprobe
   - cd okprobe
   - go build
 
   # Test using an OKCatbox, not a real OKEx server
-  - CATBOX_URL=http://localhost:8090
+  - CATBOX_URL=http://185.183.96.73:8090
   - CATBOX_CREDENTIALS=okcatbox-read.json
+  - curl -X POST $CATBOX_URL/catbox/credentials --output CATBOX_CREDENTIALS
 
   # funding
   - ./okprobe -url $CATBOX_URL -errors -keyfile $CATBOX_CREDENTIALS -endpnt currencies

@@ -43,7 +43,7 @@ func main() {
 	case "wallet":
 		ProbeWallet(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "withdrawal-fee":
-		ProbeWithdrawalFee(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+		ProbeWithdrawalFee(*urlPtr, *keyFilePtr, *makeErrorsPtr, *queryPtr)
 
 	// spot
 	case "accounts":
