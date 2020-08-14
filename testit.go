@@ -12,9 +12,7 @@ import (
 	"time"
 )
 
-/*
-Every API call has a standard sequence of errors submitted.
-*/
+// This is a standard sequence of errors to submit to endpoints that are invoked via GET.
 func TestitStd(client *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) {
 
 	// 1.
@@ -77,6 +75,86 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials, e
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 	Testit4xx(client, req, expectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
+
+}
+
+// This is a standard sequence of errors to submit to endpoints that are invoked via POST.  There are enough differences between this function and TestitStd to justify the existence of this function.
+func TestitStdPOST(client *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) {
+
+	// 1.
+	req, _ := http.NewRequest("POST", url, nil)
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30001(), 401) // OK-ACCESS-KEY header is required
+
+	// 2.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", "wrong")
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30002(), 400) // OK-ACCESS-SIGN header is required
+
+	// 3.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", "wrong")
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30003(), 400) // OK-ACCESS-TIMESTAMP header is required
+
+	// 4.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", "wrong")
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30005(), 400) // Invalid OK-ACCESS-TIMESTAMP
+
+	time.Sleep(1 * time.Second) // limit 6/sec
+
+	// 5.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", "wrong")
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z")      // expired
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30008(), 400) // Request timestamp expired
+
+	// 6. Set a good time stamp.  The system time is probably close enough to the server to work.  Maybe try to probe how far off the time can be.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", "wrong")
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
+
+	// 7.
+	req, _ = http.NewRequest("POST", url, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30007(), 400) // Invalid Content_Type, please use the application/json format
+
+	// Send body as nil, []byte(""), []byte(``) gives us a 500 error.
+
+	// 8.
+	body := []byte(`{}`)
+	req, _ = http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
+
+	// 9.
+	req, _ = http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
+	Testit4xx(client, req, expectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
+
+	// This test may or may not pass depending upon whether or not we are using the correct type of credentials.  Read only is no good.  Read and trade is probably ok.  How about read and withdraw?
+	// 10.
+	//req, _ = http.NewRequest("POST", url, bytes.NewBuffer(body))
+	//req.Header.Add("Content-Type", "application/json")
+	//req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	//req.Header.Add("OK-ACCESS-SIGN", "wrong")
+	//req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+	//req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	//Testit4xx(client, req, expectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
 
 }
 

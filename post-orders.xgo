@@ -1,0 +1,195 @@
+package main
+
+import (
+	//"bytes"
+	//"encoding/json"
+	//"errors"
+	//"github.com/bostontrader/okcommon"
+	//"net/http"
+	//"strings"
+	//"time"
+	"fmt"
+)
+
+
+func ProbePostOrders(urlBase, keyFile string, makeErrors bool) {
+
+	//endpoint := "/api/spot/v3/orders"
+	//url := urlBase + endpoint
+	//client := GetClient(urlBase)
+	credentials := getCredentials(keyFile)
+
+	cf := Config {
+		"https://okex.com",
+		"",
+		credentials.Key,
+		credentials.SecretKey,
+		credentials.Passphrase,
+		30,true,ENGLISH,
+	}
+	c := NewClient(cf)
+
+	optionals := NewParams()
+
+	// case1: Fail to sell a spot limit order
+	optionals["type"] = "limit"
+	optionals["price"] = "0.030"
+	optionals["size"] = "1"
+
+	//r, err := c.PostSpotOrders("sell", "btc-usdt", &optionals)
+	r, err := c.PostSpotOrders("sell", "BSV-BTC", &optionals)
+
+	fmt.Println(r, err)
+	//require.True(t, r != nil, r)
+	//require.True(t, (*r)["error_code"] == "33017", r)
+	//require.True(t, err == nil, err)
+	//jstr, _ := Struct2JsonString(r)
+	//println(jstr)
+
+	// Case2: Success to buy or sell a spot limit order
+	//accounts, err := c.GetSpotAccounts()
+	//var acc map[string]string
+	//for _, ac := range *accounts {
+		//if ac["currency"] == "ETC" {
+			//acc = ac
+			//break
+		//}
+	//}
+
+	//currency := acc["currency"]
+	//instId := currency + "-USDT"
+	//optionals["type"] = "limit"
+	//optionals["price"] = "0.01"
+	//optionals["size"] = "0.01"
+
+	//r, err = c.PostSpotOrders("buy", instId, &optionals)
+	//fmt.Printf("%+v %+v \n", r, err)
+
+	// Case3: Cancel posted order.
+	//r, err = c.PostSpotCancelOrders(instId, "fake_order_id")
+	//fmt.Printf("%+v %+v \n", r, err)
+
+
+
+	//n, e := PostSpotOrders("side", "instrument_id", optionalOrderInfo *map[string]string)
+	//n, e := OKClient.PostSpotOrders1("side", "instrument_id", 666)
+	//n, e := EatCatfood()
+
+	//fmt.Println(n,e)
+
+
+
+
+
+
+	// This should all be a POST for this endpoint!
+	//if makeErrors {
+		//TestitStd(client, url, credentials, utils.ExpectedResponseHeadersB)
+	//}
+
+	// Now try to probe errors regarding missing/wrong request parameters
+
+	//invalid := "invalid"
+	//instrument_id := "BSV-BTC"
+	//status := "buy"
+
+	// get json and bin styles request body
+	//var jsonBody string
+	//var binBody = bytes.NewReader(make([]byte, 0))
+	//if params != nil {
+		//jsonBody, binBody, err = ParseRequestParams(params)
+		//if err != nil {
+			//return response, err
+		//}
+	//}
+
+
+
+
+	// 1. Don't provide any parameters
+	/*timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	prehash := timestamp + "POST" + endpoint + "{}"
+	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ := http.NewRequest("POST", url, strings.NewReader("{}"))
+	req.Header.Add("CONTENT-TYPE", "application/json")
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30023("{instrument_id}The parameter cannot be empty. The required parameter cannot be empty."), 400)
+
+	// 2. Invalid instrument_id
+	/*timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params := "?instrument_id=" + invalid
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30032(), 400)
+
+	// 3. Valid instrument_id only
+	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params = "?instrument_id=" + instrument_id
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30023("{status}The parameter cannot be empty. The required parameter cannot be empty."), 400)
+
+	// 4. Invalid status
+	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params = "?instrument_id=" + instrument_id + "&status=" + invalid
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err33007(), 400)
+
+	// 4. Valid status
+	timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params = "?instrument_id=" + instrument_id + "&status=" + status
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err33007(), 400)*/
+
+	// The final correct request must have a valid signature, so build one now.
+	//timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	//prehash := timestamp + "GET" + endpoint
+	//encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+
+	//req, err := http.NewRequest("GET", url, nil)
+	//req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	//req.Header.Add("OK-ACCESS-SIGN", encoded)
+	//req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	//req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	//extraExpectedResponseHeaders := map[string]string{
+		//"Strict-Transport-Security": "",
+	//}
+
+	//body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	//walletEntries := make([]utils.WalletEntry, 0)
+	//dec := json.NewDecoder(body)
+	//dec.DisallowUnknownFields()
+	//err = dec.Decode(&walletEntries)
+	//if err != nil {
+		//panic(err)
+	//}
+	//fmt.Println(&walletEntries)
+	//fmt.Println(reflect.TypeOf(walletEntries))
+}
+
+

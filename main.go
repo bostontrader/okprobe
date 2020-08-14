@@ -40,6 +40,10 @@ func main() {
 		ProbeDepositAddress(*urlPtr, *keyFilePtr, *makeErrorsPtr, *queryPtr)
 	case "deposit-history":
 		ProbeDepositHistory(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+	case "ledger":
+		ProbeLedger(*urlPtr, *keyFilePtr, *makeErrorsPtr)
+	case "transfer":
+		ProbeTransfer(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "wallet":
 		ProbeWallet(*urlPtr, *keyFilePtr, *makeErrorsPtr)
 	case "withdrawal-fee":

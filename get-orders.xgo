@@ -1,0 +1,272 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	utils "github.com/bostontrader/okcommon"
+	"net/http"
+	"reflect"
+	"time"
+)
+
+func intabs(n1 int) int {
+	if n1 >= 0 {
+		return n1
+	} else {
+		return -n1
+	}
+}
+
+func compare(f1, f2 Fragment, cur_min int) int {
+
+	//n := intabs(600 - (f1.L1 + f2.L1) + 600 - (f1.L2 + f2.L2))
+	//if n < cur_min {
+		//cur_min = n
+		//fmt.Println("newmin a", f1.ID, f2.ID, cur_min)
+	//}
+
+	n := intabs(600 - (f1.L1 + f2.L2) + 600 - (f1.L2 + f2.L1))
+	if n < cur_min {
+		cur_min = n
+		fmt.Println("newmin b", f1.ID, f2.ID, cur_min)
+	}
+
+	n = intabs(600 - (f1.L2 + f2.L1) + 600 - (f1.L1 + f2.L2))
+	if n < cur_min {
+		cur_min = n
+		fmt.Println("newmin c", f1.ID, f2.ID, cur_min)
+	}
+
+	//n = intabs(600 - (f1.L2 + f2.L2) + 600 - (f1.L1 + f2.L1))
+	//if n < cur_min {
+		//cur_min = n
+		//fmt.Println("newmin d", f1.ID, f2.ID, cur_min)
+	//}
+
+	return cur_min
+
+}
+
+func ProbeGetOrders(urlBase, keyFile string, makeErrors bool) {
+
+	//fragments := make([]Fragment, 0)
+	// lengths in mm
+	fragments := [15]Fragment{
+		{1,265,430},
+		{2,350,381},
+		{3,290,342},
+		{4,336,250},
+		{5,176,135},
+		{6,242,208},
+		{7,178, 223},
+		{8,355,266},
+		{9,255, 112},
+		{10, 195,254},
+		{11,458,506},
+		{12,351,325},
+		{13,275,247},
+		{14,264,189},
+		{15,204,148},
+	}
+
+	fmt.Println(fragments)
+
+	min := 600
+	for i1, f1 := range fragments {
+		for i2, f2 := range fragments {
+			if i1 != i2 { // don't compare a fragment to itself
+				min = compare(f1, f2, min)
+			}
+		}
+	}
+	endpoint := "/api/spot/v3/orders"
+	url := urlBase + endpoint
+	client := GetClient(urlBase)
+	credentials := getCredentials(keyFile)
+
+	if makeErrors {
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeadersB)
+	}
+
+	// Now try to probe errors regarding missing/wrong request parameters
+
+	invalid := "invalid"
+	invalid_no := "666"
+	instrument_id := "BSV-BTC"
+	state := "0" // open
+	//status := "0"
+
+
+	if makeErrors {
+		// 1. Don't provide any parameters
+		timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		prehash := timestamp + "GET" + endpoint
+		encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+		req, _ := http.NewRequest("GET", url, nil)
+		req.Header.Add("CONTENT-TYPE", "application/json")
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30023("{instrument_id}The parameter cannot be empty. The required parameter cannot be empty."), 400)
+
+		// 2. Invalid instrument_id
+		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		params := "?instrument_id=" + invalid
+		prehash = timestamp + "GET" + endpoint + params
+		encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+		req, _ = http.NewRequest("GET", url+params, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30032(), 400) // The currency pair does not exist
+
+		// 3. Valid instrument_id only
+		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		params = "?instrument_id=" + instrument_id
+		prehash = timestamp + "GET" + endpoint + params
+		encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+		req, _ = http.NewRequest("GET", url+params, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30023("{status}The parameter cannot be empty. The required parameter cannot be empty."), 400)
+
+		// 4. instrument_id, state = invalid
+		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		params = "?instrument_id=" + instrument_id + "&state=" + invalid
+		prehash = timestamp + "GET" + endpoint + params
+		encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+		req, _ = http.NewRequest("GET", url+params, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err30025("{state}Parameter value is incorrectly filled, only numbers can be filled in"), 400)
+
+		// 5. instrument_id, state = invalid_no
+		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+		params = "?instrument_id=" + instrument_id + "&state=" + invalid_no
+		prehash = timestamp + "GET" + endpoint + params
+		encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+		req, _ = http.NewRequest("GET", url+params, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", encoded)
+		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		Testit4xx(client, req, utils.ExpectedResponseHeadersB, Err0(), 500)
+
+	}
+
+
+
+	// 6. instrument_id, state
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params := "?instrument_id=" + instrument_id + "&state=" + state
+	prehash := timestamp + "GET" + endpoint + params
+	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ := http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	extraExpectedResponseHeaders := map[string]string{
+	//"Strict-Transport-Security": "",
+	}
+	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	orders := make([]Order, 0)
+	dec := json.NewDecoder(body)
+	dec.DisallowUnknownFields()
+	err := dec.Decode(&orders)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(&orders)
+	fmt.Println(reflect.TypeOf(orders))
+
+	// 4. Valid status
+	/*timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	params = "?instrument_id=" + instrument_id + "&status=" + status
+	prehash = timestamp + "GET" + endpoint + params
+	encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	req, _ = http.NewRequest("GET", url+params, nil)
+	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	Testit4xx(client, req, utils.ExpectedResponseHeadersB, utils.Err33007(), 400)*/
+
+	// The final correct request must have a valid signature, so build one now.
+	//timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	//prehash := timestamp + "GET" + endpoint
+	//encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+
+	//req, err := http.NewRequest("GET", url, nil)
+	//req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+	//req.Header.Add("OK-ACCESS-SIGN", encoded)
+	//req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	//req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+	//extraExpectedResponseHeaders := map[string]string{
+		//"Strict-Transport-Security": "",
+	//}
+
+	//body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	//walletEntries := make([]utils.WalletEntry, 0)
+	//dec := json.NewDecoder(body)
+	//dec.DisallowUnknownFields()
+	//err = dec.Decode(&walletEntries)
+	//if err != nil {
+		//panic(err)
+	//}
+	//fmt.Println(&walletEntries)
+	//fmt.Println(reflect.TypeOf(walletEntries))
+}
+
+func Err0() utils.OKError {
+	return utils.OKError{
+		ErrorMessage: "System error",
+		Message:      "System error",
+	}
+}
+
+// Possible types:
+// 1. a single corner
+// 2. two adjacent corners
+// 3. three adjacent corners
+
+/* Start by considering type 1, single corner.  The corner has L1 and L2 leading away from it.  We don't know which edge
+L1 or L2 lie on.  Unless L1 or L2 > short edge.  But this doesn't matter.
+
+We measure in mm.
+
+ */
+type Fragment struct {
+	ID int
+	L1 int
+	L2 int
+}
+
+
+type Order struct {
+	ClientOID      string `json:"client_oid"`
+	CreatedAd      string `json:"created_at"`
+	FilledNotional string `json:"filled_notional"`
+	FilledSize     string `json:"filled_size"`
+	Funds          string `json:"funds"`
+	InstrumentID   string `json:"instrument_id"`
+	Notional       string `json:"notional"`
+	OrderID        string `json:"order_id"`
+	OrderType      string `json:"order_type"`
+	Price          string `json:"price"`
+	PriceAvg       string `json:"price_avg"`
+	ProductID      string `json:"product_id"`
+	Side           string `json:"side"`
+	Size           string `json:"size"`
+	State          string `json:"state"`
+	Status         string `json:"status"`
+	Timestamp      string `json:"timestamp"`
+	Type           string `json:"type"`
+}
+
