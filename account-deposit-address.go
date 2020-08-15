@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func ProbeWithdrawalFee(urlBase string, keyFile string, makeErrors bool, query string) {
+func ProbeAccountDepositAddress(urlBase string, keyFile string, makeErrors bool, query string) {
 
-	endpoint := "/api/account/v3/withdrawal/fee"
+	endpoint := "/api/account/v3/deposit/address"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 	credentials := getCredentials(keyFile)
@@ -27,7 +27,7 @@ func ProbeWithdrawalFee(urlBase string, keyFile string, makeErrors bool, query s
 	// But this is of minimal importance so don't bother trying to test for this.  We certainly don't care to mimic this behavior in the catbox.
 
 	if makeErrors {
-		// Don't request any currency, so by default get them all
+		// Don't request any currency
 		timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
 		prehash := timestamp + "GET" + endpoint
 		encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
@@ -36,10 +36,7 @@ func ProbeWithdrawalFee(urlBase string, keyFile string, makeErrors bool, query s
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		//extraExpectedResponseHeaders = map[string]string{
-		//"Strict-Transport-Security": "",
-		//"Vary":                      "",
-		//}
+		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30023("currency cannot be blank"), 400)
 
 		// Request an invalid currency
 		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
@@ -96,10 +93,10 @@ func ProbeWithdrawalFee(urlBase string, keyFile string, makeErrors bool, query s
 	if resp.StatusCode == 200 {
 
 		// Parse this json just to prove that we can.
-		withdrawlFees := make([]utils.WithdrawalFee, 0)
+		depositAddress := make([]utils.DepositAddress, 0)
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
-		err = dec.Decode(&withdrawlFees)
+		err = dec.Decode(&depositAddress)
 		if err != nil {
 			fmt.Println(err)
 		}

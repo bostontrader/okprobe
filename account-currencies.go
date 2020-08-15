@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-func ProbeLedger(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountCurrencies(urlBase string, keyFile string, makeErrors bool) {
 
-	endpoint := "/api/account/v3/ledger"
+	endpoint := "/api/account/v3/currencies"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 	credentials := getCredentials(keyFile)
@@ -32,16 +32,16 @@ func ProbeLedger(urlBase, keyFile string, makeErrors bool) {
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 	extraExpectedResponseHeaders := map[string]string{
 		"Strict-Transport-Security": "",
+		"Vary":                      "",
 	}
-
 	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	walletEntries := make([]utils.WalletEntry, 0)
+	currenciesEntries := make([]utils.CurrenciesEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&walletEntries)
+	err = dec.Decode(&currenciesEntries)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&walletEntries)
-	fmt.Println(reflect.TypeOf(walletEntries))
+	fmt.Println(&currenciesEntries)
+	fmt.Println(reflect.TypeOf(currenciesEntries))
 }

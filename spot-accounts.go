@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
+func ProbeSpotAccounts(urlBase, keyFile string, makeErrors bool) {
 
-	endpoint := "/api/account/v3/currencies"
+	endpoint := "/api/spot/v3/accounts"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 	credentials := getCredentials(keyFile)
 
 	if makeErrors {
-		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeadersB)
 	}
 
 	// The final correct request must have a valid signature, so build one now.
@@ -34,14 +34,15 @@ func ProbeCurrencies(urlBase string, keyFile string, makeErrors bool) {
 		"Strict-Transport-Security": "",
 		"Vary":                      "",
 	}
-	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	currenciesEntries := make([]utils.CurrenciesEntry, 0)
+
+	body := Testit200(client, req, catMap(utils.ExpectedResponseHeadersB, extraExpectedResponseHeaders))
+	accountsEntries := make([]utils.AccountsEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&currenciesEntries)
+	err = dec.Decode(&accountsEntries)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&currenciesEntries)
-	fmt.Println(reflect.TypeOf(currenciesEntries))
+	fmt.Println(&accountsEntries)
+	fmt.Println(reflect.TypeOf(accountsEntries))
 }

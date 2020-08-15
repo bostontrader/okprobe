@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-func ProbeAccounts(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountLedger(urlBase, keyFile string, makeErrors bool) {
 
-	endpoint := "/api/spot/v3/accounts"
+	endpoint := "/api/account/v3/ledger"
 	url := urlBase + endpoint
 	client := GetClient(urlBase)
 	credentials := getCredentials(keyFile)
 
 	if makeErrors {
-		TestitStd(client, url, credentials, utils.ExpectedResponseHeadersB)
+		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
 	}
 
 	// The final correct request must have a valid signature, so build one now.
@@ -32,17 +32,16 @@ func ProbeAccounts(urlBase, keyFile string, makeErrors bool) {
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 	extraExpectedResponseHeaders := map[string]string{
 		"Strict-Transport-Security": "",
-		"Vary":                      "",
 	}
 
-	body := Testit200(client, req, catMap(utils.ExpectedResponseHeadersB, extraExpectedResponseHeaders))
-	accountsEntries := make([]utils.AccountsEntry, 0)
+	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	walletEntries := make([]utils.WalletEntry, 0)
 	dec := json.NewDecoder(body)
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&accountsEntries)
+	err = dec.Decode(&walletEntries)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(&accountsEntries)
-	fmt.Println(reflect.TypeOf(accountsEntries))
+	fmt.Println(&walletEntries)
+	fmt.Println(reflect.TypeOf(walletEntries))
 }

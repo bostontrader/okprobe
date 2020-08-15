@@ -26,7 +26,7 @@ B. If :currencyid == an invalid currency then we get Err30031 as we might expect
 
 C. If :currencyid == a valid currency then the call still returns all deposit records, as if we had not specified any :currencyid at all.
 */
-func ProbeDepositHistory(urlBase string, keyFile string, makeErrors bool) {
+func ProbeAccountDepositHistory(urlBase string, keyFile string, makeErrors bool) {
 
 	endpoint := "/api/account/v3/deposit/history"
 	url := urlBase + endpoint

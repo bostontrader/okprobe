@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func ProbeWallet(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountWallet(urlBase, keyFile string, makeErrors bool) {
 
 	endpoint := "/api/account/v3/wallet"
 	url := urlBase + endpoint

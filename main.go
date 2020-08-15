@@ -2,64 +2,23 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
+	//"github.com/spf13/cobra/cobra/cmd"
+
+	//"encoding/json"
+	//"flag"
+	//utils "github.com/bostontrader/okcommon"
+	//"github.com/spf13/cobra"
+	//"io/ioutil"
+	//"os"
+	//"flag"
 	utils "github.com/bostontrader/okcommon"
 	"io/ioutil"
-	"os"
+	//"os"
+	//"./cmd"
 )
 
 func main() {
-
-	endPtr := flag.String("endpnt", "wallet", "The name of the endpoint to invoke")
-	keyFilePtr := flag.String("keyfile", "/path/to/apikeys.json", "The name of a file that contains the API keys")
-	makeErrorsPtr := flag.Bool("errors", false, "Invoke the API calls using intentional errors.")
-	queryPtr := flag.String("query", "", "The query string to send to the server with GET requests.  For example: '?a=good&b=better'")
-	urlPtr := flag.String("url", "https://www.okex.com", "The URL of the API")
-
-	// Args[0] is okprobe
-	if len(os.Args) <= 1 {
-		flag.Usage()
-		return
-	}
-
-	flag.Parse()
-	fmt.Println("Invoking the Probe with the following configuration:")
-	fmt.Println("endpnt:", *endPtr)
-	fmt.Println("errors:", *makeErrorsPtr)
-	fmt.Println("keyfile:", *keyFilePtr)
-	fmt.Println("query:", *queryPtr)
-	fmt.Println("url:", *urlPtr)
-
-	switch *endPtr {
-
-	// funding
-	case "currencies":
-		ProbeCurrencies(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	case "deposit-address":
-		ProbeDepositAddress(*urlPtr, *keyFilePtr, *makeErrorsPtr, *queryPtr)
-	case "deposit-history":
-		ProbeDepositHistory(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	case "ledger":
-		ProbeLedger(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	case "transfer":
-		ProbeTransfer(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	case "wallet":
-		ProbeWallet(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	case "withdrawal-fee":
-		ProbeWithdrawalFee(*urlPtr, *keyFilePtr, *makeErrorsPtr, *queryPtr)
-
-	// spot
-	case "accounts":
-		ProbeAccounts(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	//case "get-orders":
-	//ProbeGetOrders(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-	//case "post-orders":
-	//ProbePostOrders(*urlPtr, *keyFilePtr, *makeErrorsPtr)
-
-	default:
-		fmt.Println("Unknown endpoint ", *endPtr)
-	}
+	Execute()
 }
 
 func getCredentials(keyFile string) utils.Credentials {

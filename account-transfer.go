@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func ProbeTransfer(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountTransfer(urlBase, keyFile string, makeErrors bool) {
 
 	endpoint := "/api/account/v3/transfer"
 	url := urlBase + endpoint
