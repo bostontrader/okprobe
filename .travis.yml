@@ -16,12 +16,12 @@ script:
   - curl -X POST $CATBOX_URL/catbox/credentials --output $CATBOX_CREDENTIALS
 
   # Now test the probes.
-  - ./okprobe accountCurrencies          --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountDepositAddress      --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams --queryString ?currency=BTC
-  - ./okprobe accountDepositHistory      --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountDepositHistoryByCur --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams --currency=BTC
-  - ./okprobe accountLedger              --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountTransfer            --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountWallet              --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountWithdrawalFee       --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe spotAccounts               --baseURL $CATBOX_URL --credentialsFile /home/wukong/Documents/okex/okex-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountCurrencies          --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountDepositAddress      --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams --queryString ?currency=BTC
+  - ./okprobe accountDepositHistory      --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountDepositHistoryByCur --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams --currency=BTC
+  - ./okprobe accountLedger              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountTransfer            --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountWallet              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountWithdrawalFee       --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe spotAccounts               --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
