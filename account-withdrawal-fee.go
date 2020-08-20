@@ -1,117 +1,83 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
-	"io/ioutil"
-	"net/http"
-	"time"
+	"os"
+	"strings"
 )
 
-func ProbeAccountWithdrawalFee(urlBase string, keyFile string, makeErrors bool, query string) {
+func ProbeAccountWithdrawalFee(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams bool, queryString string) {
 
-	endpoint := "/api/account/v3/withdrawal/fee"
-	url := urlBase + endpoint
-	client := GetClient(urlBase)
-	credentials := getCredentials(keyFile)
+	// 1. Standard prolog.
+	endPoint := "/api/account/v3/withdrawal/fee"
 
-	if makeErrors {
-		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
-	}
-
-	// Requests after this point require a valid signature.
-
-	// Extraneous parameters appear to be ignored, the full list is returned, and two extra headers appear: Vary and Strict-Transport-Security.  Status = 200.  For example: ?catfood and ?catfood=yum.
-	// But this is of minimal importance so don't bother trying to test for this.  We certainly don't care to mimic this behavior in the catbox.
-
-	if makeErrors {
-		// Don't request any currency, so by default get them all
-		timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-		prehash := timestamp + "GET" + endpoint
-		encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
-		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-		req.Header.Add("OK-ACCESS-SIGN", encoded)
-		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		//extraExpectedResponseHeaders = map[string]string{
-		//"Strict-Transport-Security": "",
-		//"Vary":                      "",
-		//}
-
-		// Request an invalid currency
-		timestamp = time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-		invalidParam := "catfood"
-		params := "?currency=" + invalidParam
-		prehash = timestamp + "GET" + endpoint + params
-		encoded, _ = utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
-		req, _ = http.NewRequest("GET", url+params, nil)
-		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-		req.Header.Add("OK-ACCESS-SIGN", encoded)
-		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		Testit4xx(client, req, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam), 400)
-	}
-
-	// Try to submit a valid request by feeding a query string.  Even if we don't specify errors, we might still make them here.
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	prehash := timestamp + "GET" + endpoint + query
-	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
-	req, err := http.NewRequest("GET", url+query, nil)
+	// 1.1 Read and parse credentials file
+	credentials, err := getCredentials(credentialsFile)
 	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", encoded)
-	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	extraExpectedResponseHeaders := map[string]string{
-		"Strict-Transport-Security": "",
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error obtaining the credentials 1.1: ", err)
 		return
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// 1.2 Obtain an http client
+	url := baseURL + endPoint
+	httpClient := GetHttpClient(baseURL)
 
-	err = resp.Body.Close()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Look for all of the expected headers in the received headers.
-	compareHeaders(resp.Header, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), req, "deposit-address")
-
-	if resp.StatusCode == 200 {
-
-		// Parse this json just to prove that we can.
-		withdrawlFees := make([]utils.WithdrawalFee, 0)
-		dec := json.NewDecoder(bytes.NewReader(body))
-		dec.DisallowUnknownFields()
-		err = dec.Decode(&withdrawlFees)
+	// 1.3 If we want to test header/credentials errors.
+	if makeErrorsCredentials {
+		err := TestitCredentialsErrors(httpClient, url, credentials, utils.ExpectedResponseHeaders)
 		if err != nil {
-			fmt.Println(err)
+			os.Exit(1)
 		}
+	}
 
-		fmt.Println(string(body))
+	// 2. This probe has an additional parameter that might be wrong.  Test for these errors if requested.
+
+	var body string
+	if makeErrorsParams {
+		// 2.1 Don't request any currency. Instead of an error, we would receive status 200 and all the fees.
+		// But that's not an error so don't bother testing it here.
+
+		// 2.2 Request an invalid currency
+		invalidParam := "catfood"
+		queryString := "?currency=" + invalidParam
+		req, err := standardGETReq(credentials, endPoint, queryString, baseURL)
+		if err != nil {
+			fmt.Println("Error building the request 2.2: ", err)
+			return
+		}
+		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
+		if err != nil {
+			fmt.Println("Error with 'currency' param 2.2: ", err)
+			return
+		}
+	}
+
+	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
+
+	// 3.1 Build a request
+	req, err := standardGETReq(credentials, endPoint, queryString, baseURL)
+	if err != nil {
+		fmt.Println("Error building the request 3.1 : ", err)
 		return
-	} else if resp.StatusCode == 400 {
-		fmt.Println(string(body))
+	}
+
+	// 3.2 We expect a 2xx response
+	body, err = TestitAPI2xx(httpClient, req, utils.ExpectedResponseHeaders)
+	if err != nil {
+		fmt.Println("Error invoking the API 3.2: ", err)
 		return
-	} else {
-		fmt.Println("StatusCode error:expected= 200 || 400, received=", resp.StatusCode)
-		fmt.Println(string(body))
+	}
+	fmt.Println(body)
+
+	// 3.3 Ensure that the prior response is parsable.
+	withDrawalFees := make([]utils.WithdrawalFee, 0)
+	dec := json.NewDecoder(strings.NewReader(body))
+	dec.DisallowUnknownFields()
+	err = dec.Decode(&withDrawalFees)
+	if err != nil {
+		fmt.Println("Error parsing string into json 3.3: ", err)
 		return
 	}
 

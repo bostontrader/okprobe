@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	utils "github.com/bostontrader/okcommon"
 	"io"
@@ -12,53 +13,81 @@ import (
 	"time"
 )
 
-// This is a standard sequence of errors to submit to endpoints that are invoked via GET.
-func TestitStd(client *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) {
+// This is a standard sequence of errors related to credentials to submit to endpoints that are invoked via GET.
+func TestitCredentialsErrors(httpClient *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) error {
 
 	// 1.
 	req, _ := http.NewRequest("GET", url, nil)
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30001(), 401) // OK-ACCESS-KEY header is required
+	_, err := TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30001())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 1: ", err)
+		return err
+	}
 
 	// 2.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30002(), 400) // OK-ACCESS-SIGN header is required
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30002())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 2: ", err)
+		return err
+	}
 
 	// 3.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30003(), 400) // OK-ACCESS-TIMESTAMP header is required
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30003())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 3: ", err)
+		return err
+	}
 
 	// 4.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30005(), 400) // Invalid OK-ACCESS-TIMESTAMP
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30005())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 4: ", err)
+		return err
+	}
 
-	time.Sleep(1 * time.Second) // limit 6/sec
+	time.Sleep(1 * time.Second) // avoid rate limit
 
 	// 5.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z")      // expired
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30008(), 400) // Request timestamp expired
+	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z") // expired
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30008())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 5: ", err)
+		return err
+	}
 
 	// 6. Set a good time stamp.  The system time is probably close enough to the server to work.  Maybe try to probe how far off the time can be.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30006(), 401) // Invalid OK-ACCESS-KEY
+	_, err = TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30006())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 6: ", err)
+		return err
+	}
 
 	// 7.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30004(), 400) // OK-ACCESS-PASSPHRASE header is required
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30004())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 7: ", err)
+		return err
+	}
 
 	// 8.
 	req, _ = http.NewRequest("GET", url, nil)
@@ -66,7 +95,11 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials, e
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30015(), 400) // Invalid OK_ACCESS_PASSPHRASE
+	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30015())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 8: ", err)
+		return err
+	}
 
 	// 9.
 	req, _ = http.NewRequest("GET", url, nil)
@@ -74,11 +107,15 @@ func TestitStd(client *http.Client, url string, credentials utils.Credentials, e
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	Testit4xx(client, req, expectedResponseHeaders, utils.Err30013(), 401) // Invalid Sign
-
+	_, err = TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30013())
+	if err != nil {
+		fmt.Println("TestitCredentials.  Error invoking API 9: ", err)
+		return err
+	}
+	return nil
 }
 
-// This is a standard sequence of errors to submit to endpoints that are invoked via POST.  There are enough differences between this function and TestitStd to justify the existence of this function.
+// This is a standard sequence of errors related to credentials to submit to endpoints that are invoked via POST.  There are enough differences between this function and TestitStd to justify the existence of this function.
 func TestitStdPOST(client *http.Client, url string, credentials utils.Credentials, expectedResponseHeaders map[string]string) {
 
 	// 1.
@@ -159,7 +196,123 @@ func TestitStdPOST(client *http.Client, url string, credentials utils.Credential
 }
 
 /*
-Given a client, and a request that we expect will produce a 200 response, make the API call and examine the response.  Ensure that
+Given an http client and a request, we want to make the API call and examine the response.  We want to ensure that
+the we get the expected status, headers, and error messages, if applicable.  Read and close the response body, return said body as a string, and return any error message if applicable.
+
+This general process is confounded because status 2xx, 4xx, and 5xx are mostly the same but want to deal with error messages using different types.  So...
+
+TestitAPICore provides the common functionality...
+TestitAPI2xx uses the core and does not expect any error.
+TestitAPI4xx uses the core and expects a utils.OKError
+TestitAPI5xx uses the core and expects a OK500Error
+*/
+func TestitAPICore(
+	client *http.Client,
+	req *http.Request,
+	expectedStatusCode int,
+	expectedResponseHeaders map[string]string,
+) ([]byte, error) {
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error in TestitAPICore ", err)
+		return []byte{}, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		fmt.Println("Error in TestitAPICore ", err)
+		return []byte{}, err
+	}
+
+	if resp.StatusCode != expectedStatusCode {
+		fmt.Println("Status code error: expected= ", expectedStatusCode, "received= ", resp.StatusCode, " body= ", string(body))
+		return []byte{}, errors.New("Status code error.")
+	}
+
+	// Look for all of the expected headers in received headers.
+	compareHeaders(resp.Header, expectedResponseHeaders, req)
+
+	return body, nil
+}
+
+func TestitAPI4xx(
+	client *http.Client,
+	req *http.Request,
+	expectedStatusCode int,
+	expectedResponseHeaders map[string]string,
+	expectedErrorMessage utils.OKError,
+) (string, error) {
+
+	body, err := TestitAPICore(client, req, expectedStatusCode, expectedResponseHeaders)
+	if err != nil {
+		fmt.Println("Error in TestitAPI4xx")
+		return "", err
+	}
+
+	var obj utils.OKError
+	err = json.Unmarshal(body, &obj)
+	if err != nil {
+		fmt.Println("Error in TestitAPI4xx json.Unmarshal error: body=", string(body))
+		return "", err
+	}
+
+	if !reflect.DeepEqual(obj, expectedErrorMessage) {
+		fmt.Println("Error in TestitAPI4xx Error message compare error: expected=", expectedErrorMessage, ", received=", obj)
+		return "", err
+	}
+
+	return string(body), nil
+
+}
+
+func TestitAPI5xx(
+	client *http.Client,
+	req *http.Request,
+	expectedResponseHeaders map[string]string,
+	expectedErrorMessage utils.OK500Error,
+) (string, error) {
+
+	body, err := TestitAPICore(client, req, 500, expectedResponseHeaders)
+	if err != nil {
+		fmt.Println("Error in TestitAPI5xx")
+		return "", err
+	}
+
+	var obj utils.OK500Error
+	err = json.Unmarshal(body, &obj)
+	if err != nil {
+		fmt.Println("Error in TestitAPI5xx json.Unmarshal error: body=", string(body))
+		return "", err
+	}
+
+	if !reflect.DeepEqual(obj, expectedErrorMessage) {
+		fmt.Println("Error in TestitAPI5xx Error message compare error: expected=", expectedErrorMessage, ", received=", obj)
+		return "", err
+	}
+
+	return string(body), nil
+
+}
+
+func TestitAPI2xx(
+	client *http.Client,
+	req *http.Request,
+	expectedResponseHeaders map[string]string,
+) (string, error) {
+
+	body, err := TestitAPICore(client, req, 200, expectedResponseHeaders)
+	if err != nil {
+		fmt.Println("Error in TestitAPI2xx")
+		return "", err
+	}
+
+	return string(body), nil
+
+}
+
+/*
+Deprecated. Use TestitAPI2xx. Given a client, and a request that we expect will produce a 200 response, make the API call and examine the response.  Ensure that
 the we get the expected headers and response.
 */
 func Testit200(
@@ -177,7 +330,7 @@ func Testit200(
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders, req, "tag200")
+	compareHeadersOld(resp.Header, expectedResponseHeaders, req, "tag200")
 
 	// Read the body into a []byte and then create a return a new io.Reader using this []byte.  This enables us to close resp.Body, which we must do, and return an io.Reader which the caller needs in order to Decode JSON.
 	body, err := ioutil.ReadAll(resp.Body)
@@ -189,7 +342,7 @@ func Testit200(
 }
 
 /*
-Given a client and a request, that we expect will produce a 4xx error, make the API call and examine the response.  Ensure that
+Deprecated. Use TestitAPI4xx. Given a client and a request, that we expect will produce a 4xx error, make the API call and examine the response.  Ensure that
 the we get the expected headers, error message, and status code.
 */
 func Testit4xx(
@@ -225,20 +378,20 @@ func Testit4xx(
 	}
 
 	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, expectedResponseHeaders, req, "tag4xx")
+	compareHeadersOld(resp.Header, expectedResponseHeaders, req, "tag4xx")
 
 	return
 }
 
 // Did we receive all the headers we expected? Did we expect all that we received?
-func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request, tag string) {
+func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request) {
 	// Look for all of the expected headers in received headers.
 	for key, _ := range expectedResponseHeaders {
 		_, ok := respHeaders[key]
 		if ok {
 			// expected and present, cool
 		} else {
-			fmt.Println(req.URL, tag, key, " expected, but not present.")
+			//fmt.Println(req.URL, key, " expected, but not present.")
 		}
 	}
 
@@ -248,7 +401,30 @@ func compareHeaders(respHeaders map[string][]string, expectedResponseHeaders map
 		if ok {
 			// received and expected, cool
 		} else {
-			fmt.Println(req.URL, tag, key, " present, but not expected.")
+			//fmt.Println(req.URL, key, " present, but not expected.")
+		}
+	}
+}
+
+// Did we receive all the headers we expected? Did we expect all that we received?
+func compareHeadersOld(respHeaders map[string][]string, expectedResponseHeaders map[string]string, req *http.Request, tag string) {
+	// Look for all of the expected headers in received headers.
+	for key, _ := range expectedResponseHeaders {
+		_, ok := respHeaders[key]
+		if ok {
+			// expected and present, cool
+		} else {
+			//fmt.Println(req.URL, tag, key, " expected, but not present.")
+		}
+	}
+
+	// Look for all of the received headers in expected headers.
+	for key, _ := range respHeaders {
+		_, ok := expectedResponseHeaders[key]
+		if ok {
+			// received and expected, cool
+		} else {
+			//fmt.Println(req.URL, tag, key, " present, but not expected.")
 		}
 	}
 }

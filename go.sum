@@ -58,6 +58,8 @@ github.com/bostontrader/okcommon v0.0.0-20200814013129-e2e5a45ff89c h1:AdD/Ldk0m
 github.com/bostontrader/okcommon v0.0.0-20200814013129-e2e5a45ff89c/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
 github.com/bostontrader/okcommon v0.0.0-20200814015121-ec88d119daab h1:QxEqll3unCVXkHz3+iUVVRBZW+CJp4vDQnkYKEkn/Yc=
 github.com/bostontrader/okcommon v0.0.0-20200814015121-ec88d119daab/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
+github.com/bostontrader/okcommon v0.0.0-20200818225400-00cd3251f4d3 h1:f+RwzGMnNHZ0p34RFrV5LsECQaLR+pMW2ZQFeQMUG1w=
+github.com/bostontrader/okcommon v0.0.0-20200818225400-00cd3251f4d3/go.mod h1:fha9Ng4sIP6ECUazxex3rtE3Muqd5D4TLlGXDjwPLhU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=

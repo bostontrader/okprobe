@@ -4,44 +4,58 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
-	"net/http"
-	"reflect"
-	"time"
+	"os"
+	"strings"
 )
 
-func ProbeAccountWallet(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountWallet(baseURL string, credentialsFile string, makeErrorsCredentials bool) {
 
-	endpoint := "/api/account/v3/wallet"
-	url := urlBase + endpoint
-	client := GetClient(urlBase)
-	credentials := getCredentials(keyFile)
+	// 1. Standard prolog.
+	endPoint := "/api/account/v3/wallet"
 
-	if makeErrors {
-		TestitStd(client, url, credentials, utils.ExpectedResponseHeaders)
+	// 1.1 Read and parse credentials file
+	credentials, err := getCredentials(credentialsFile)
+	if err != nil {
+		fmt.Println("Error obtaining the credentials 1.1: ", err)
+		return
 	}
 
-	// The final correct request must have a valid signature, so build one now.
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	prehash := timestamp + "GET" + endpoint
-	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
+	// 1.2 Obtain an http client
+	url := baseURL + endPoint
+	httpClient := GetHttpClient(baseURL)
 
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", encoded)
-	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	extraExpectedResponseHeaders := map[string]string{
-		"Strict-Transport-Security": "",
+	// 1.3 If we want to test header/credentials errors.
+	if makeErrorsCredentials {
+		err := TestitCredentialsErrors(httpClient, url, credentials, utils.ExpectedResponseHeaders)
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 
-	body := Testit200(client, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+	// 2. After we've tried all the errors, it's time to build and submit the final correct request.
+
+	// 2.1 Build a request
+	req, err := standardGETReq(credentials, endPoint, "", baseURL)
+	if err != nil {
+		fmt.Println("Error building the request 2.1 : ", err)
+		return
+	}
+
+	// 2.2 We expect a 2xx response
+	body, err := TestitAPI2xx(httpClient, req, utils.ExpectedResponseHeaders)
+	if err != nil {
+		fmt.Println("Error invoking the API 2.2: ", err)
+		return
+	}
+	fmt.Println(body)
+
+	// 2.3 Ensure that the prior response is parsable.
 	walletEntries := make([]utils.WalletEntry, 0)
-	dec := json.NewDecoder(body)
+	dec := json.NewDecoder(strings.NewReader(body))
 	dec.DisallowUnknownFields()
 	err = dec.Decode(&walletEntries)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error parsing string into json 2.3: ", err)
+		return
 	}
-	fmt.Println(&walletEntries)
-	fmt.Println(reflect.TypeOf(walletEntries))
 }

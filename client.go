@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func GetClient(urlBase string) (client *http.Client) {
+func GetHttpClient(urlBase string) (client *http.Client) {
 
 	if len(urlBase) >= 6 && urlBase[:6] == "https:" {
 		tr := &http.Transport{

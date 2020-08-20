@@ -8,16 +8,15 @@ import (
 	"time"
 )
 
-func ProbeAccountTransfer(urlBase, keyFile string, makeErrors bool) {
+func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams, makeErrorsWrongCredentialsType bool, queryString string) {
 
 	endpoint := "/api/account/v3/transfer"
-	url := urlBase + endpoint
-	client := GetClient(urlBase)
-	credentials := getCredentials(keyFile)
+	url := baseURL + endpoint
+	client := GetHttpClient(baseURL)
+	credentials := getCredentialsOld(credentialsFile)
 
-	if makeErrors {
+	if makeErrorsCredentials {
 		TestitStdPOST(client, url, credentials, utils.ExpectedResponseHeaders)
-
 	}
 
 	// Now try a variety of parameter errors.  Be sure to use sufficient credentials. These tests will all require a valid signature.
