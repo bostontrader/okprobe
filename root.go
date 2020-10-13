@@ -9,9 +9,11 @@ var (
 	// For global flags
 	baseURL                        string
 	credentialsFile                string
+	forReal                        bool
 	makeErrorsCredentials          bool
 	makeErrorsParams               bool
 	makeErrorsWrongCredentialsType bool
+	postBody                       string
 	queryString                    string
 
 	// For accountDepositHistoryByCurCmd flag
@@ -73,7 +75,7 @@ var (
 		Short: "Invoke POST /api/account/v3/transfer",
 		Long:  `Invoke POST /api/account/v3/transfer`,
 		Run: func(cmd *cobra.Command, args []string) {
-			ProbeAccountTransfer(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams, makeErrorsWrongCredentialsType, queryString)
+			ProbeAccountTransfer(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams, makeErrorsWrongCredentialsType, forReal, postBody)
 		},
 	}
 
@@ -123,10 +125,12 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&baseURL, "baseURL", "https://www.okex.com", "The base url of the OKEx server to use.")
 	rootCmd.PersistentFlags().StringVar(&credentialsFile, "credentialsFile", "/path/to/mycredentials.json", "A file name for a file that contains the OKEx credentials to use.")
+	rootCmd.PersistentFlags().BoolVar(&forReal, "forReal", false, "When invoking this API send a real request that will actually produce a real response. (default false)")
 	rootCmd.PersistentFlags().BoolVar(&makeErrorsCredentials, "makeErrorsCredentials", false, "When invoking this API send a variety errors related to the credentials and test that we receive the expected responses. (default false)")
 	rootCmd.PersistentFlags().BoolVar(&makeErrorsParams, "makeErrorsParams", false, "When invoking this API send a variety errors related to the parameters of this endpoint and test that we receive the expected responses. (default false)")
 	rootCmd.PersistentFlags().BoolVar(&makeErrorsWrongCredentialsType, "makeErrorsWrongCredentialsType", false, "When invoking this API, the user is knowingly sending the credentials of the wrong type.  Test that the call fails as expected. (default false)")
-	rootCmd.PersistentFlags().StringVar(&queryString, "queryString", "", "A complete query string to send with a GET endpoint.  For example: '?param1=A&param2=B'  (default empty string)")
+	rootCmd.PersistentFlags().StringVar(&postBody, "postBody", "", "A string to send to a POST endpoint for use as the request body.  For example: `{\"from\":\"6\", \"to\":\"1\", \"amount\":\"0.1\", \"currency\":\"bsv\"}`  (default empty string)")
+	rootCmd.PersistentFlags().StringVar(&queryString, "queryString", "", "A complete query string to send to a GET endpoint.  For example: '?param1=A&param2=B'  (default empty string)")
 
 	accountDepositHistoryByCurCmd.PersistentFlags().StringVar(&currency, "currency", "", "A currency of interest.'  (default empty string)")
 

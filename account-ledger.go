@@ -86,7 +86,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.2.2: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024())
+		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
 		if err != nil {
 			fmt.Println("Error with 'type' param 2.2.2: ", err)
 			return

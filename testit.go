@@ -197,9 +197,11 @@ func TestitStdPOST(client *http.Client, url string, credentials utils.Credential
 
 /*
 Given an http client and a request, we want to make the API call and examine the response.  We want to ensure that
-the we get the expected status, headers, and error messages, if applicable.  Read and close the response body, return said body as a string, and return any error message if applicable.
+the we get the expected status, headers, and error messages, if applicable.  Read and close the response body, return
+said body as a string, and return any error message if applicable.
 
-This general process is confounded because status 2xx, 4xx, and 5xx are mostly the same but want to deal with error messages using different types.  So...
+This general process is confounded because status 2xx, 4xx, and 5xx are mostly the same but want to deal with error
+messages using different types.  So...
 
 TestitAPICore provides the common functionality...
 TestitAPI2xx uses the core and does not expect any error.
@@ -326,7 +328,9 @@ func Testit200(
 	}
 
 	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Println("error:\nexpected= ", 200, "\nreceived=", resp.StatusCode)
+		fmt.Println("Status code error: expected= ", 200, "received= ", resp.StatusCode, " body= ", string(body))
 	}
 
 	// Look for all of the expected headers in received headers.
