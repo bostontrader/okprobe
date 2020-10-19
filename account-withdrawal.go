@@ -28,7 +28,7 @@ func (pt *ParamTester) testit(body string, expectedErrorMessage utils.OKError) {
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 	req.Header.Add("OK-ACCESS-PASSPHRASE", pt.Credentials.Passphrase)
 
-	TestitAPI4xxNew(pt.Client, req, 400, expectedErrorMessage)
+	TestitAPI4xx(pt.Client, req, 400, expectedErrorMessage)
 
 }
 
@@ -62,7 +62,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 			"Strict-Transport-Security": "",
 		}
 
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 401,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30012()) // Invalid authority
 

@@ -38,7 +38,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 			"Strict-Transport-Security": "",
 		}
 
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 401,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30012())
 
@@ -62,7 +62,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders := map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
 
@@ -81,7 +81,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
 
@@ -100,7 +100,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
 
@@ -119,7 +119,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("to parameter format is error"))
 
@@ -138,7 +138,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("amount parameter format is error"))
 
@@ -157,7 +157,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30023("currency cannot be blank"))
 
@@ -176,7 +176,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type from"))
 
@@ -195,7 +195,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type to"))
 
@@ -214,7 +214,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		extraExpectedResponseHeaders = map[string]string{
 			"Strict-Transport-Security": "",
 		}
-		_, _ = TestitAPI4xx(
+		_, _ = TestitAPI4xxOld(
 			client, req, 400,
 			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err34008())
 

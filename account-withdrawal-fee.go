@@ -47,7 +47,7 @@ func ProbeAccountWithdrawalFee(baseURL string, credentialsFile string, makeError
 			fmt.Println("Error building the request 2.2: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
 		if err != nil {
 			fmt.Println("Error with 'currency' param 2.2: ", err)
 			return

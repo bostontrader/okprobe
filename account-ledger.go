@@ -56,7 +56,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
 		if err != nil {
 			fmt.Println("Error with 'currency' param 2.1: ", err)
 			return
@@ -86,7 +86,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.2.2: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
 		if err != nil {
 			fmt.Println("Error with 'type' param 2.2.2: ", err)
 			return
@@ -102,7 +102,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.3.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("after parameter format is error"))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("after parameter format is error"))
 		if err != nil {
 			fmt.Println("Error with 'after' param 2.3.1: ", err)
 			return
@@ -145,7 +145,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.4.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("before parameter format is error"))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("before parameter format is error"))
 		if err != nil {
 			fmt.Println("Error with 'before' param 2.4.1: ", err)
 			return
@@ -188,7 +188,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.5.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("limit parameter format is error"))
+		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("limit parameter format is error"))
 		if err != nil {
 			fmt.Println("Error with 'limit' param 2.5.1: ", err)
 			return

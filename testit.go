@@ -19,7 +19,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 
 	// 1.
 	req, _ := http.NewRequest("GET", url, nil)
-	_, err := TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30001())
+	_, err := TestitAPI4xxOld(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30001())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 1: ", err)
 		return err
@@ -28,7 +28,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	// 2.
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30002())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30002())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 2: ", err)
 		return err
@@ -38,7 +38,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req, _ = http.NewRequest("GET", url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30003())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30003())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 3: ", err)
 		return err
@@ -49,7 +49,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30005())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30005())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 4: ", err)
 		return err
@@ -62,7 +62,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z") // expired
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30008())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30008())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 5: ", err)
 		return err
@@ -73,7 +73,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	_, err = TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30006())
+	_, err = TestitAPI4xxOld(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30006())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 6: ", err)
 		return err
@@ -84,7 +84,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30004())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30004())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 7: ", err)
 		return err
@@ -96,7 +96,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	_, err = TestitAPI4xx(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30015())
+	_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30015())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 8: ", err)
 		return err
@@ -108,7 +108,7 @@ func TestitCredentialsErrors(httpClient *http.Client, url string, credentials ut
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	_, err = TestitAPI4xx(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30013())
+	_, err = TestitAPI4xxOld(httpClient, req, 401, utils.ExpectedResponseHeaders, utils.Err30013())
 	if err != nil {
 		fmt.Println("TestitCredentials.  Error invoking API 9: ", err)
 		return err
@@ -197,6 +197,7 @@ func TestitStdPOST(client *http.Client, url string, credentials utils.Credential
 }
 
 /*
+Deprecated.
 Given an http client and a request, we want to make the API call and examine the response.  We want to ensure that
 the we get the expected status, headers, and error messages, if applicable.  Read and close the response body, return
 said body as a string, and return any error message if applicable.
@@ -206,10 +207,10 @@ messages using different types.  So...
 
 TestitAPICore provides the common functionality...
 TestitAPI2xx uses the core and does not expect any error.
-TestitAPI4xx uses the core and expects a utils.OKError
+TestitAPI4xxOld uses the core and expects a utils.OKError
 TestitAPI5xx uses the core and expects a OK500Error
 */
-func TestitAPICore(
+func TestitAPICoreOld(
 	client *http.Client,
 	req *http.Request,
 	expectedStatusCode int,
@@ -267,7 +268,8 @@ func TestitAPICoreNew(
 	return body
 }
 
-func TestitAPI4xx(
+/* Deprecated */
+func TestitAPI4xxOld(
 	client *http.Client,
 	req *http.Request,
 	expectedStatusCode int,
@@ -275,21 +277,21 @@ func TestitAPI4xx(
 	expectedErrorMessage utils.OKError,
 ) (string, error) {
 
-	body, err := TestitAPICore(client, req, expectedStatusCode, expectedResponseHeaders)
+	body, err := TestitAPICoreOld(client, req, expectedStatusCode, expectedResponseHeaders)
 	if err != nil {
-		fmt.Println("Error in TestitAPI4xx")
+		fmt.Println("Error in TestitAPI4xxOld")
 		return "", err
 	}
 
 	var obj utils.OKError
 	err = json.Unmarshal(body, &obj)
 	if err != nil {
-		fmt.Println("Error in TestitAPI4xx json.Unmarshal error: body=", string(body))
+		fmt.Println("Error in TestitAPI4xxOld json.Unmarshal error: body=", string(body))
 		return "", err
 	}
 
 	if !reflect.DeepEqual(obj, expectedErrorMessage) {
-		fmt.Println("Error in TestitAPI4xx Error message compare error: expected=", expectedErrorMessage, ", received=", obj)
+		fmt.Println("Error in TestitAPI4xxOld Error message compare error: expected=", expectedErrorMessage, ", received=", obj)
 		return "", err
 	}
 
@@ -297,13 +299,13 @@ func TestitAPI4xx(
 
 }
 
-func TestitAPI4xxNew(
+func TestitAPI4xx(
 	client *http.Client,
 	req *http.Request,
 	expectedStatusCode int,
 	expectedErrorMessage utils.OKError,
 ) {
-	methodName := "okprobe:testit.go:TestitAPI4xxNew"
+	methodName := "okprobe:testit.go:TestitAPI4xx"
 	body := TestitAPICoreNew(client, req, expectedStatusCode)
 
 	var errorMessage utils.OKError
@@ -328,7 +330,7 @@ func TestitAPI5xx(
 	expectedErrorMessage utils.OK500Error,
 ) (string, error) {
 
-	body, err := TestitAPICore(client, req, 500, expectedResponseHeaders)
+	body, err := TestitAPICoreOld(client, req, 500, expectedResponseHeaders)
 	if err != nil {
 		fmt.Println("Error in TestitAPI5xx")
 		return "", err
@@ -356,7 +358,7 @@ func TestitAPI2xx(
 	expectedResponseHeaders map[string]string,
 ) (string, error) {
 
-	body, err := TestitAPICore(client, req, 200, expectedResponseHeaders)
+	body, err := TestitAPICoreOld(client, req, 200, expectedResponseHeaders)
 	if err != nil {
 		fmt.Println("Error in TestitAPI2xx")
 		return "", err
