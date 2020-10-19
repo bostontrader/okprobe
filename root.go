@@ -88,6 +88,15 @@ var (
 		},
 	}
 
+	accountWithdrawalCmd = &cobra.Command{
+		Use:   "accountWithdrawal",
+		Short: "Invoke GET /api/account/v3/withdrawal",
+		Long:  `Invoke GET /api/account/v3/withdrawal`,
+		Run: func(cmd *cobra.Command, args []string) {
+			ProbeAccountWithdrawal(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams, makeErrorsWrongCredentialsType, forReal, postBody)
+		},
+	}
+
 	accountWithdrawalFeeCmd = &cobra.Command{
 		Use:   "accountWithdrawalFee",
 		Short: "Invoke GET /api/account/v3/withdrawal/fee",
@@ -141,6 +150,7 @@ func init() {
 	rootCmd.AddCommand(accountLedgerCmd)
 	rootCmd.AddCommand(accountTransferCmd)
 	rootCmd.AddCommand(accountWalletCmd)
+	rootCmd.AddCommand(accountWithdrawalCmd)
 	rootCmd.AddCommand(accountWithdrawalFeeCmd)
 	rootCmd.AddCommand(spotAccountsCmd)
 

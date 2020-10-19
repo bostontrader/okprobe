@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
 	"time"
 )
@@ -238,6 +239,34 @@ func TestitAPICore(
 	return body, nil
 }
 
+func TestitAPICoreNew(
+	client *http.Client,
+	req *http.Request,
+	expectedStatusCode int,
+) []byte {
+	methodName := "okprobe:testit.go:TestitAPICoreNew"
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("%s: client.Do error %v\n", methodName, err)
+		os.Exit(1)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("%s: ioutil.ReadAll error %v\n", methodName, err)
+		os.Exit(1)
+	}
+
+	resp.Body.Close()
+
+	if resp.StatusCode != expectedStatusCode {
+		fmt.Printf("%s: Status code error: expected=%d, received=%d\nbody=%s\n", methodName, expectedStatusCode, resp.StatusCode, " body= ", string(body))
+		os.Exit(1)
+	}
+
+	return body
+}
+
 func TestitAPI4xx(
 	client *http.Client,
 	req *http.Request,
@@ -266,6 +295,30 @@ func TestitAPI4xx(
 
 	return string(body), nil
 
+}
+
+func TestitAPI4xxNew(
+	client *http.Client,
+	req *http.Request,
+	expectedStatusCode int,
+	expectedErrorMessage utils.OKError,
+) {
+	methodName := "okprobe:testit.go:TestitAPI4xxNew"
+	body := TestitAPICoreNew(client, req, expectedStatusCode)
+
+	var errorMessage utils.OKError
+	err := json.Unmarshal(body, &errorMessage)
+	if err != nil {
+		fmt.Printf("%s: json.Unmarshal error: body=%s\n", methodName, string(body))
+		os.Exit(1)
+	}
+
+	if !reflect.DeepEqual(errorMessage, expectedErrorMessage) {
+		fmt.Printf("%s: Error message compare error: expected=%v, received=%v\n", methodName, expectedErrorMessage, errorMessage)
+		os.Exit(1)
+	}
+
+	return
 }
 
 func TestitAPI5xx(

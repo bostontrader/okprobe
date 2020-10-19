@@ -23,5 +23,6 @@ script:
   - ./okprobe accountLedger              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
   - ./okprobe accountTransfer            --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
   - ./okprobe accountWallet              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - ./okprobe accountWithdrawal          --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
   - ./okprobe accountWithdrawalFee       --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
   - ./okprobe spotAccounts               --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
