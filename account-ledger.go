@@ -17,11 +17,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 	endPoint := "/api/account/v3/ledger"
 
 	// 1.1 Read and parse credentials file
-	credentials, err := getCredentials(credentialsFile)
-	if err != nil {
-		fmt.Println("Error obtaining the credentials 1.1: ", err)
-		return
-	}
+	credentials := getCredentials(credentialsFile)
 
 	// 1.2 Obtain an http client
 	httpClient := GetHttpClient(baseURL)

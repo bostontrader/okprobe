@@ -13,7 +13,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 	endpoint := "/api/account/v3/withdrawal"
 	url := baseURL + endpoint
 	client := GetHttpClient(baseURL)
-	credentials := getCredentialsOld(credentialsFile)
+	credentials := getCredentials(credentialsFile)
 
 	if makeErrorsCredentials {
 		TestitStdPOST(client, url, credentials)

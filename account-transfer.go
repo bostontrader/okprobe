@@ -13,7 +13,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 	endpoint := "/api/account/v3/transfer"
 	url := baseURL + endpoint
 	client := GetHttpClient(baseURL)
-	credentials := getCredentialsOld(credentialsFile)
+	credentials := getCredentials(credentialsFile)
 
 	if makeErrorsCredentials {
 		TestitStdPOST(client, url, credentials)
