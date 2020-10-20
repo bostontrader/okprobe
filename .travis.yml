@@ -4,25 +4,8 @@ go:
   - 1.14.x
 
 script:
-  - git clone https://github.com/bostontrader/okprobe
-  - cd okprobe
-  - go build
+  - go get github.com/bostontrader/okcatbox
+  - go get github.com/bostontrader/okconnect
+  - go get github.com/bostontrader/okprobe
 
-  # Test using an OKCatbox, not a real OKEx server
-  - CATBOX_URL=http://185.183.96.73:8090
-  - CATBOX_CREDENTIALS=okcatbox-read.json
-
-  # Get credentials for the catbox
-  - curl -X POST $CATBOX_URL/catbox/credentials --output $CATBOX_CREDENTIALS
-
-  # Now test the probes.
-  - ./okprobe accountCurrencies          --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountDepositAddress      --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams --queryString ?currency=BTC
-  - ./okprobe accountDepositHistory      --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountDepositHistoryByCur --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams --currency=BTC
-  - ./okprobe accountLedger              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountTransfer            --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountWallet              --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountWithdrawal          --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe accountWithdrawalFee       --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
-  - ./okprobe spotAccounts               --baseURL $CATBOX_URL --credentialsFile okcatbox-read.json --makeErrorsCredentials --makeErrorsParams
+  - go run main.go
