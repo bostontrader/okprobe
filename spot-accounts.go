@@ -1,11 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
-	"os"
-	"strings"
 )
 
 func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredentials bool) {
@@ -26,10 +25,7 @@ func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredent
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		err := TestitCredentialsErrors(httpClient, url, credentials, utils.ExpectedResponseHeaders)
-		if err != nil {
-			os.Exit(1)
-		}
+		TestitCredentialsErrors(httpClient, url, credentials)
 	}
 
 	// 2. After we've tried all the errors, it's time to build and submit the final correct request.
@@ -42,16 +38,11 @@ func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredent
 	}
 
 	// 2.2 We expect a 2xx response
-	body, err := TestitAPI2xx(httpClient, req, utils.ExpectedResponseHeaders)
-	if err != nil {
-		fmt.Println("Error invoking the API 2.2: ", err)
-		return
-	}
-	fmt.Println(body)
+	body := TestitAPICore(httpClient, req, 200)
 
 	// 2.3 Ensure that the prior response is parsable.
 	accountsEntries := make([]utils.AccountsEntry, 0)
-	dec := json.NewDecoder(strings.NewReader(body))
+	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	err = dec.Decode(&accountsEntries)
 	if err != nil {

@@ -1,11 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	utils "github.com/bostontrader/okcommon"
-	"os"
-	"strings"
 )
 
 /*
@@ -39,16 +38,13 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		err := TestitCredentialsErrors(httpClient, url, credentials, utils.ExpectedResponseHeaders)
-		if err != nil {
-			os.Exit(1)
-		}
+		TestitCredentialsErrors(httpClient, url, credentials)
 	}
 
 	// 2. This probe has an additional parameter that might be wrong.  Test for these errors if requested.
 
 	// Recall that in this probe the currency parameter is part of the URL. It's not in the queryString.
-	var body string
+	//var body string
 	if makeErrorsParams {
 		// 2.1 Don't request any currency. Instead of an error, we would receive status 200 and all the deposits.
 		// But that's not an error so don't bother testing it here.
@@ -60,11 +56,12 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 			fmt.Println("Error building the request 2.2: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidCur))
-		if err != nil {
-			fmt.Println("Error with 'currency' param 2.2: ", err)
-			return
-		}
+		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidCur))
+		//if err != nil {
+		//fmt.Println("Error with 'currency' param 2.2: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30031(invalidCur))
 	}
 
 	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
@@ -77,16 +74,11 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 	}
 
 	// 2.2 We expect a 2xx response
-	body, err = TestitAPI2xx(httpClient, req, utils.ExpectedResponseHeaders)
-	if err != nil {
-		fmt.Println("Error invoking the API 2.2: ", err)
-		return
-	}
-	fmt.Println(body)
+	body1 := TestitAPICore(httpClient, req, 200)
 
 	// 2.3 Ensure that the prior response is parsable.
 	depositHistories := make([]utils.DepositHistory, 0)
-	dec := json.NewDecoder(strings.NewReader(body))
+	dec := json.NewDecoder(bytes.NewReader(body1))
 	dec.DisallowUnknownFields()
 	err = dec.Decode(&depositHistories)
 	if err != nil {

@@ -16,7 +16,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 	credentials := getCredentialsOld(credentialsFile)
 
 	if makeErrorsCredentials {
-		TestitStdPOST(client, url, credentials, utils.ExpectedResponseHeaders)
+		TestitStdPOST(client, url, credentials)
 	}
 
 	// Make a call with valid headers but using the wrong credentials.  Wrong credentials will fail first
@@ -34,13 +34,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
 
-		_, _ = TestitAPI4xxOld(
-			client, req, 401,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30012())
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 401,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30012())
+		TestitAPI4xx(client, req, 401, utils.Err30012())
 
 	}
 
@@ -59,12 +57,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+		TestitAPI4xx(client, req, 400, utils.Err30025("from parameter format is error"))
 
 		//{"error_message":"from parameter format is error","code":30025,"error_code":"30025","message":"from parameter format is error"}
 		body = `{"from":""}`
@@ -78,12 +75,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+		TestitAPI4xx(client, req, 400, utils.Err30025("from parameter format is error"))
 
 		//{"error_message":"from parameter format is error","code":30025,"error_code":"30025","message":"from parameter format is error"}
 		body = `{"from":"wrong"}`
@@ -97,12 +93,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("from parameter format is error"))
+		TestitAPI4xx(client, req, 400, utils.Err30025("from parameter format is error"))
 
 		//{"error_message":"to parameter format is error","code":30025,"error_code":"30025","message":"to parameter format is error"}
 		body = `{"from":"666"}`
@@ -116,12 +111,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("to parameter format is error"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("to parameter format is error"))
+		TestitAPI4xx(client, req, 400, utils.Err30025("to parameter format is error"))
 
 		//{"error_message":"amount parameter format is error","code":30025,"error_code":"30025","message":"amount parameter format is error"}
 		body = `{"from":"666", "to":"888"}`
@@ -135,12 +129,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("amount parameter format is error"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30025("amount parameter format is error"))
+		TestitAPI4xx(client, req, 400, utils.Err30025("amount parameter format is error"))
 
 		// {"error_message":"currency cannot be blank","code":30023,"error_code":"30023","message":"currency cannot be blank"}
 		body = `{"from":"666", "to":"888", "amount":"0.1"}`
@@ -154,12 +147,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30023("currency cannot be blank"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30023("currency cannot be blank"))
+		TestitAPI4xx(client, req, 400, utils.Err30023("currency cannot be blank"))
 
 		// {"error_message":"Invalid type from","code":30024,"error_code":"30024","message":"Invalid type from"}
 		body = `{"from":"666", "to":"888", "amount":"0.1", "currency":"xlm"}`
@@ -173,12 +165,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type from"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type from"))
+		TestitAPI4xx(client, req, 400, utils.Err30024("Invalid type from"))
 
 		// {"error_message":"Invalid type to","code":30024,"error_code":"30024","message":"Invalid type to"}
 		body = `{"from":"6", "to":"888", "amount":"0.1", "currency":"xlm"}`
@@ -192,12 +183,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type to"))
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30024("Invalid type to"))
+		TestitAPI4xx(client, req, 400, utils.Err30024("Invalid type to"))
 
 		// {"error_message":"Insufficient funds","code":34008,"error_code":"34008","message":"Insufficient funds"}
 		body = `{"from":"6", "to":"1", "amount":"1000", "currency":"btc"}`
@@ -211,12 +201,11 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		_, _ = TestitAPI4xxOld(
-			client, req, 400,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err34008())
+
+		//_, _ = TestitAPI4xxOld(
+		//client, req, 400,
+		//catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err34008())
+		TestitAPI4xx(client, req, 400, utils.Err34008())
 
 	}
 
@@ -232,14 +221,9 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		responseBody, _ := TestitAPI2xx(
-			client, req,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+		body := TestitAPICore(client, req, 200)
 
-		fmt.Println(responseBody)
+		fmt.Println(string(body))
 
 	}
 }

@@ -1,12 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bostontrader/okcommon"
 	"net/http"
-	"os"
-	"strings"
 )
 
 func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams bool, queryString string) {
@@ -29,10 +28,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		err := TestitCredentialsErrors(httpClient, baseURL+endPoint, credentials, utils.ExpectedResponseHeaders)
-		if err != nil {
-			os.Exit(1)
-		}
+		TestitCredentialsErrors(httpClient, baseURL+endPoint, credentials)
 	}
 
 	// 2. This probe has several additional parameters.  Test for errors if requested.
@@ -40,8 +36,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 
 	// type, before, after, and limit parameters are strings that should parse into integers.  There are subtle differences between the behavior for these things.
 
-	var body string
-	var extraExpectedResponseHeaders map[string]string
+	//var body string
+	//var extraExpectedResponseHeaders map[string]string
 
 	if makeErrorsParams {
 
@@ -56,11 +52,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
-		if err != nil {
-			fmt.Println("Error with 'currency' param 2.1: ", err)
-			return
-		}
+		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
+		//if err != nil {
+		//fmt.Println("Error with 'currency' param 2.1: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30031(invalidParam))
 
 		// 2.2 Request an invalid type.
 
@@ -72,11 +69,11 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.2.1: ", err)
 			return
 		}
-		body, err = TestitAPI5xx(httpClient, req, utils.ExpectedResponseHeaders, utils.Err500())
-		if err != nil {
-			fmt.Println("Error with 'type' param 2.2.1: ", err)
-			return
-		}
+		//_, err = TestitAPI5xxOld(httpClient, req, utils.Err500())
+		//if err != nil {
+		//fmt.Println("Error with 'type' param 2.2.1: ", err)
+		//return
+		//}
 
 		// 2.2.2 If the param can parse into an integer, test that it's one of the chosen ints.
 		invalidParam = "666"
@@ -86,11 +83,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.2.2: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
-		if err != nil {
-			fmt.Println("Error with 'type' param 2.2.2: ", err)
-			return
-		}
+		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
+		//if err != nil {
+		//fmt.Println("Error with 'type' param 2.2.2: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30024("catfood"))
 
 		// 2.3 Request an invalid after.
 
@@ -102,11 +100,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.3.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("after parameter format is error"))
-		if err != nil {
-			fmt.Println("Error with 'after' param 2.3.1: ", err)
-			return
-		}
+		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("after parameter format is error"))
+		//if err != nil {
+		//fmt.Println("Error with 'after' param 2.3.1: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30025("after parameter format is error"))
 
 		// 2.3.2 If it can parse into any integer then expect success.
 		invalidParam = "-1"
@@ -116,18 +115,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.3.2: ", err)
 			return
 		}
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		body, err = TestitAPI2xx(httpClient, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-		if err != nil {
-			fmt.Println("Error invoking the API 2.3.2: ", err)
-			return
-		}
+
+		body := TestitAPICore(httpClient, req, 200)
 
 		// 2.3.2.1 Ensure that the prior response is parsable.
 		ledgerEntries := make([]utils.LedgerEntry, 0)
-		dec := json.NewDecoder(strings.NewReader(body))
+		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err = dec.Decode(&ledgerEntries)
 		if err != nil {
@@ -145,12 +138,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.4.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("before parameter format is error"))
-		if err != nil {
-			fmt.Println("Error with 'before' param 2.4.1: ", err)
-			return
-		}
-
+		//body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("before parameter format is error"))
+		//if err != nil {
+		//fmt.Println("Error with 'before' param 2.4.1: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30025("before parameter format is error"))
 		// 2.4.2 If it can parse into an integer then expect success.
 		invalidParam = "-1"
 		queryString = "?after=" + invalidParam
@@ -159,18 +152,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.5.2: ", err)
 			return
 		}
-		extraExpectedResponseHeaders = map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		body, err = TestitAPI2xx(httpClient, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-		if err != nil {
-			fmt.Println("Error invoking the API 2.3.3: ", err)
-			return
-		}
+
+		body = TestitAPICore(httpClient, req, 200)
 
 		// 2.3.3.1 Ensure that the prior response is parsable.
 		ledgerEntries = make([]utils.LedgerEntry, 0)
-		dec = json.NewDecoder(strings.NewReader(body))
+		dec = json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err = dec.Decode(&ledgerEntries)
 		if err != nil {
@@ -188,11 +175,12 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.5.1: ", err)
 			return
 		}
-		body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("limit parameter format is error"))
-		if err != nil {
-			fmt.Println("Error with 'limit' param 2.5.1: ", err)
-			return
-		}
+		//body, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("limit parameter format is error"))
+		//if err != nil {
+		//fmt.Println("Error with 'limit' param 2.5.1: ", err)
+		//return
+		//}
+		TestitAPI4xx(httpClient, req, 400, utils.Err30025("limit parameter format is error"))
 
 		// 2.5.2 Limit < 0
 		invalidParam = "-1"
@@ -202,11 +190,11 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 			fmt.Println("Error building the request 2.6.2 ", err)
 			return
 		}
-		body, err = TestitAPI5xx(httpClient, req, utils.ExpectedResponseHeaders, utils.Err500())
-		if err != nil {
-			fmt.Println("Error with 'limit' param 2.5.2: ", err)
-			return
-		}
+		//_, err := TestitAPI5xxOld(httpClient, req, utils.Err500())
+		//if err != nil {
+		//fmt.Println("Error with 'limit' param 2.5.2: ", err)
+		//return
+		//}
 	}
 
 	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
@@ -216,16 +204,11 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		fmt.Println("Error building the request 3: ", err)
 		return
 	}
-	body, err = TestitAPI2xx(httpClient, req, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
-	if err != nil {
-		fmt.Println("Error invoking the API 3: ", err)
-		return
-	}
-	fmt.Println(body)
+	body1 := TestitAPICore(httpClient, req, 200)
 
 	// 3.1 Ensure that the prior response is parsable.
 	ledgerEntries := make([]utils.LedgerEntry, 0)
-	dec := json.NewDecoder(strings.NewReader(body))
+	dec := json.NewDecoder(bytes.NewReader(body1))
 	dec.DisallowUnknownFields()
 	err = dec.Decode(&ledgerEntries)
 	if err != nil {

@@ -8,30 +8,6 @@ import (
 	"time"
 )
 
-type ParamTester struct {
-	Client      *http.Client
-	Credentials utils.Credentials
-	Endpoint    string
-	Url         string
-}
-
-func (pt *ParamTester) testit(body string, expectedErrorMessage utils.OKError) {
-
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
-	prehash := timestamp + "POST" + pt.Endpoint + body
-	encoded, _ := utils.HmacSha256Base64Signer(prehash, pt.Credentials.SecretKey)
-
-	req, _ := http.NewRequest("POST", pt.Url, strings.NewReader(body))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("OK-ACCESS-KEY", pt.Credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", encoded)
-	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
-	req.Header.Add("OK-ACCESS-PASSPHRASE", pt.Credentials.Passphrase)
-
-	TestitAPI4xx(pt.Client, req, 400, expectedErrorMessage)
-
-}
-
 func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams, makeErrorsWrongCredentialsType bool, forReal bool, postBody string) {
 
 	endpoint := "/api/account/v3/withdrawal"
@@ -40,7 +16,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 	credentials := getCredentialsOld(credentialsFile)
 
 	if makeErrorsCredentials {
-		TestitStdPOST(client, url, credentials, utils.ExpectedResponseHeaders)
+		TestitStdPOST(client, url, credentials)
 	}
 
 	// Make a call with valid headers but using the wrong credentials.  Wrong credentials will fail first
@@ -58,13 +34,8 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
 
-		_, _ = TestitAPI4xxOld(
-			client, req, 401,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), utils.Err30012()) // Invalid authority
+		TestitAPI4xx(client, req, 401, utils.Err30012()) // Invalid authority
 
 	}
 
@@ -102,14 +73,9 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		extraExpectedResponseHeaders := map[string]string{
-			"Strict-Transport-Security": "",
-		}
-		responseBody, _ := TestitAPI2xx(
-			client, req,
-			catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders))
+		responseBody := TestitAPICore(client, req, 200)
 
-		fmt.Println(responseBody)
+		fmt.Println(string(responseBody))
 
 	}
 }

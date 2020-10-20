@@ -6,48 +6,49 @@ import (
 	utils "github.com/bostontrader/okcommon"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
 // Build and execute an http request.  Test for a 200 status and the expected response headers.  Return the response body as a string.
-func standardGET(client http.Client, credentials utils.Credentials, endPoint string, queryString string, urlBase string) string {
+//func standardGET(client http.Client, credentials utils.Credentials, endPoint string, queryString string, urlBase string) string {
 
-	extraExpectedResponseHeaders := map[string]string{
-		"Strict-Transport-Security": "",
-		"Vary":                      "",
-	}
+//extraExpectedResponseHeaders := map[string]string{
+//"Strict-Transport-Security": "",
+//"Vary":                      "",
+//}
 
-	req, err := standardGETReq(credentials, endPoint, queryString, urlBase)
-	if err != nil {
-		fmt.Println("Error building the request ", err)
-		return ""
-	}
+//req, err := standardGETReq(credentials, endPoint, queryString, urlBase)
+//if err != nil {
+//fmt.Println("Error building the request ", err)
+//return ""
+//}
 
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Println("Error in submitting the http request: ", err)
-		return ""
-	}
+//resp, err := client.Do(req)
+//defer resp.Body.Close()
+//if err != nil {
+//fmt.Println("Error in submitting the http request: ", err)
+//return ""
+//}
 
-	if resp.StatusCode != 200 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println("Status code error: expected= ", 200, " received=", resp.StatusCode, " body =", string(body))
-		return ""
-	}
+//if resp.StatusCode != 200 {
+//body, _ := ioutil.ReadAll(resp.Body)
+//fmt.Println("Status code error: expected= ", 200, " received=", resp.StatusCode, " body =", string(body))
+//return ""
+//}
 
-	// Look for all of the expected headers in received headers.
-	compareHeaders(resp.Header, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), req)
+// Look for all of the expected headers in received headers.
+//compareHeaders(resp.Header, catMap(utils.ExpectedResponseHeaders, extraExpectedResponseHeaders), req)
 
-	// Read the body into a []byte and return it.
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading the response body. ", err)
-		return ""
-	}
+// Read the body into a []byte and return it.
+//body, err := ioutil.ReadAll(resp.Body)
+//if err != nil {
+//fmt.Println("Error reading the response body. ", err)
+//return ""
+//}
 
-	return string(body)
-}
+//return string(body)
+//}
 
 // queryString should have the initial ? mark, if present
 func standardGETReq(credentials utils.Credentials, endPoint string, queryString, urlBase string) (*http.Request, error) {
@@ -110,5 +111,9 @@ func catMap(a, b map[string]string) map[string]string {
 }
 
 func main() {
-	Execute()
+	err := Execute()
+	if err != nil {
+		fmt.Printf("okprobe:main.go:main: Execute error %v\n", err)
+		os.Exit(1)
+	}
 }
