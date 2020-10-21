@@ -34,7 +34,7 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		TestitCredentialsErrors(httpClient, url, credentials)
+		TestitCredentialsHeadersErrors(httpClient, url, "GET", credentials)
 	}
 
 	// 2. This probe has an additional parameter that might be wrong.  Test for these errors if requested.
@@ -47,11 +47,8 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 
 		// 2.2 Request an invalid currency
 		invalidCur := "catfood"
-		req, err := standardGETReq(credentials, endPoint+invalidCur, "", baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.2: ", err)
-			return
-		}
+		req := buildGETRequest(credentials, endPoint+invalidCur, "", baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidCur))
 		//if err != nil {
 		//fmt.Println("Error with 'currency' param 2.2: ", err)
@@ -63,11 +60,7 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
 
 	// 3.1 Build a request
-	req, err := standardGETReq(credentials, endPoint, queryString, baseURL)
-	if err != nil {
-		fmt.Println("Error building the request 3.1 : ", err)
-		return
-	}
+	req := buildGETRequest(credentials, endPoint, queryString, baseURL)
 
 	// 2.2 We expect a 2xx response
 	body1 := TestitAPICore(httpClient, req, 200)
@@ -76,7 +69,7 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 	depositHistories := make([]utils.DepositHistory, 0)
 	dec := json.NewDecoder(bytes.NewReader(body1))
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&depositHistories)
+	err := dec.Decode(&depositHistories)
 	if err != nil {
 		fmt.Println("Error parsing string into json 2.3: ", err)
 		return

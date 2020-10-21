@@ -24,7 +24,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		TestitCredentialsErrors(httpClient, baseURL+endPoint, credentials)
+		TestitCredentialsHeadersErrors(httpClient, baseURL+endPoint, "GET", credentials)
 	}
 
 	// 2. This probe has several additional parameters.  Test for errors if requested.
@@ -43,11 +43,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.1 Request an invalid currency
 		invalidParam = "catfood"
 		queryString = "?currency=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.1: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
 		//if err != nil {
 		//fmt.Println("Error with 'currency' param 2.1: ", err)
@@ -60,11 +57,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.2.1 If the param cannot parse into an integer, error 500.
 		invalidParam = "catfood"
 		queryString = "?type=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.2.1: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err = TestitAPI5xxOld(httpClient, req, utils.Err500())
 		//if err != nil {
 		//fmt.Println("Error with 'type' param 2.2.1: ", err)
@@ -74,11 +68,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.2.2 If the param can parse into an integer, test that it's one of the chosen ints.
 		invalidParam = "666"
 		queryString = "?type=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.2.2: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30024("catfood"))
 		//if err != nil {
 		//fmt.Println("Error with 'type' param 2.2.2: ", err)
@@ -91,11 +82,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.3.1 If the param cannot parse into an integer then error.
 		invalidParam = "catfood"
 		queryString = "?after=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.3.1: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30025("after parameter format is error"))
 		//if err != nil {
 		//fmt.Println("Error with 'after' param 2.3.1: ", err)
@@ -106,11 +94,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.3.2 If it can parse into any integer then expect success.
 		invalidParam = "-1"
 		queryString = "?after=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.3.2: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
 
 		body := TestitAPICore(httpClient, req, 200)
 
@@ -129,7 +113,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.4.1 If the param cannot parse into an integer then error.
 		invalidParam = "catfood"
 		queryString = "?before=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
 		if err != nil {
 			fmt.Println("Error building the request 2.4.1: ", err)
 			return
@@ -143,11 +127,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.4.2 If it can parse into an integer then expect success.
 		invalidParam = "-1"
 		queryString = "?after=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.5.2: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
 
 		body = TestitAPICore(httpClient, req, 200)
 
@@ -166,7 +146,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.5.1 If the param cannot parse into an integer then error.
 		invalidParam = "catfood"
 		queryString = "?limit=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
 		if err != nil {
 			fmt.Println("Error building the request 2.5.1: ", err)
 			return
@@ -181,11 +161,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// 2.5.2 Limit < 0
 		invalidParam = "-1"
 		queryString = "?limit=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.6.2 ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err := TestitAPI5xxOld(httpClient, req, utils.Err500())
 		//if err != nil {
 		//fmt.Println("Error with 'limit' param 2.5.2: ", err)
@@ -195,7 +172,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 
 	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
 	// Since we may optionally feed a query string from the command line, the query string might produce errors.  Deal with it.
-	req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
+	req = buildGETRequest(credentials, endPoint, queryString, baseURL)
 	if err != nil {
 		fmt.Println("Error building the request 3: ", err)
 		return

@@ -10,22 +10,24 @@ import (
 	"time"
 )
 
-// queryString should have the initial ? mark, if present
-func standardGETReq(credentials utils.Credentials, endPoint string, queryString, urlBase string) (*http.Request, error) {
+/* Given a urlBase, endPoint, and queryString, as well as credentials, built a suitable GET request.
+If present, the queryString should include the initial ? mark. In the event of any errors, os.Exit(1)
+*/
+func buildGETRequest(credentials utils.Credentials, endPoint string, queryString, urlBase string) *http.Request {
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
 	prehash := timestamp + "GET" + endPoint + queryString
 	encoded, _ := utils.HmacSha256Base64Signer(prehash, credentials.SecretKey)
 	req, err := http.NewRequest("GET", urlBase+endPoint+queryString, nil)
 	if err != nil {
 		fmt.Println("Error building NewRequest ", err)
-		return nil, err
+		os.Exit(1)
 	}
 	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
 	req.Header.Add("OK-ACCESS-SIGN", encoded)
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 
-	return req, nil
+	return req
 }
 
 /* Given a file name, attempt to read and parse a credentials file.  os.exit(1) on any error. */

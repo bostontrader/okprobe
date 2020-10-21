@@ -16,7 +16,7 @@ func ProbeAccountTransfer(baseURL string, credentialsFile string, makeErrorsCred
 	credentials := getCredentials(credentialsFile)
 
 	if makeErrorsCredentials {
-		TestitStdPOST(client, url, credentials)
+		TestitCredentialsHeadersErrors(client, url, "POST", credentials)
 	}
 
 	// Make a call with valid headers but using the wrong credentials.  Wrong credentials will fail first

@@ -21,17 +21,13 @@ func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredent
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		TestitCredentialsErrors(httpClient, url, credentials)
+		TestitCredentialsHeadersErrors(httpClient, url, "GET", credentials)
 	}
 
 	// 2. After we've tried all the errors, it's time to build and submit the final correct request.
 
 	// 2.1 Build a request
-	req, err := standardGETReq(credentials, endPoint, "", baseURL)
-	if err != nil {
-		fmt.Println("Error building the request 2.1 : ", err)
-		return
-	}
+	req := buildGETRequest(credentials, endPoint, "", baseURL)
 
 	// 2.2 We expect a 2xx response
 	body := TestitAPICore(httpClient, req, 200)
@@ -40,7 +36,7 @@ func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredent
 	accountsEntries := make([]utils.AccountsEntry, 0)
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&accountsEntries)
+	err := dec.Decode(&accountsEntries)
 	if err != nil {
 		fmt.Println("Error parsing string into json 2.3: ", err)
 		return

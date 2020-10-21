@@ -21,7 +21,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 
 	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
-		TestitCredentialsErrors(httpClient, url, credentials)
+		TestitCredentialsHeadersErrors(httpClient, url, "GET", credentials)
 	}
 
 	// 2. This probe has an additional parameter that might be wrong.  Test for these errors if requested.
@@ -31,11 +31,8 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 	//var body string
 	if makeErrorsParams {
 		// 2.1 Don't request any currency
-		req, err := standardGETReq(credentials, endPoint, "", baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.1: ", err)
-			return
-		}
+		req := buildGETRequest(credentials, endPoint, "", baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30023("currency cannot be blank"))
 		//if err != nil {
 		//fmt.Println("Error with 'currency' param 2.1: ", err)
@@ -46,11 +43,8 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 		// 2.2 Request an invalid currency
 		invalidParam := "catfood"
 		queryString := "?currency=" + invalidParam
-		req, err = standardGETReq(credentials, endPoint, queryString, baseURL)
-		if err != nil {
-			fmt.Println("Error building the request 2.2: ", err)
-			return
-		}
+		req = buildGETRequest(credentials, endPoint, queryString, baseURL)
+
 		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidParam))
 		//if err != nil {
 		//fmt.Println("Error with 'currency' param 2.2: ", err)
@@ -62,11 +56,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
 
 	// 3.1 Build a request
-	req, err := standardGETReq(credentials, endPoint, queryString, baseURL)
-	if err != nil {
-		fmt.Println("Error building the request 3.1 : ", err)
-		return
-	}
+	req := buildGETRequest(credentials, endPoint, queryString, baseURL)
 
 	// 3.2 We expect a 2xx response
 	body1 := TestitAPICore(httpClient, req, 200)
@@ -75,7 +65,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 	depositAddresses := make([]utils.DepositAddress, 0)
 	dec := json.NewDecoder(bytes.NewReader(body1))
 	dec.DisallowUnknownFields()
-	err = dec.Decode(&depositAddresses)
+	err := dec.Decode(&depositAddresses)
 	if err != nil {
 		fmt.Println("Error parsing string into json 3.3: ", err)
 		return

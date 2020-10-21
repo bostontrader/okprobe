@@ -48,122 +48,96 @@ func BuildNewRequest(method string, url string, body io.Reader) *http.Request {
 	return req
 }
 
-// This is a standard sequence of errors related to credentials to submit to endpoints that are invoked via GET.
-func TestitCredentialsErrors(httpClient *http.Client, url string, credentials utils.Credentials) {
-
-	req := BuildNewRequest("GET", url, nil)
-	TestitAPI4xx(httpClient, req, 401, utils.Err30001())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	TestitAPI4xx(httpClient, req, 400, utils.Err30002())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	TestitAPI4xx(httpClient, req, 400, utils.Err30003())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	TestitAPI4xx(httpClient, req, 400, utils.Err30005())
-
-	time.Sleep(1 * time.Second) // avoid rate limit
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z") // expired
-	TestitAPI4xx(httpClient, req, 400, utils.Err30008())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	TestitAPI4xx(httpClient, req, 401, utils.Err30006())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	TestitAPI4xx(httpClient, req, 400, utils.Err30004())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	TestitAPI4xx(httpClient, req, 400, utils.Err30015())
-
-	req = BuildNewRequest("GET", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-	TestitAPI4xx(httpClient, req, 401, utils.Err30013())
-
-	return
+/* Given a body and an error as returned from JSON.decode, check for an error.  If so, print an error message and os.Exit(1).
+Otherwise just silently go home.
+*/
+func isJSONError(body []byte, err error) {
+	if err != nil {
+		fmt.Printf("%okprobe:testit.go:isJSONError: JSON decode error: Err=%v\nbody=%s\n", err, body)
+		os.Exit(1)
+	}
 }
 
-// This is a standard sequence of errors related to credentials to submit to endpoints that are invoked via POST.  There are enough differences between this function and TestitStd to justify the existence of this function.
-func TestitStdPOST(client *http.Client, url string, credentials utils.Credentials) {
+/* Perform a sequence of erroneous API calls with defective credential headers for endpoints. */
+func TestitCredentialsHeadersErrors(httpClient *http.Client, url string, method string, credentials utils.Credentials) {
 
-	req := BuildNewRequest("POST", url, nil)
-	TestitAPI4xx(client, req, 401, utils.Err30001()) // OK-ACCESS-KEY header is required
+	req := BuildNewRequest(method, url, nil)
+	TestitAPI4xx(httpClient, req, 401, utils.Err30001()) // OK-ACCESS-KEY header is required
 
-	req = BuildNewRequest("POST", url, nil)
+	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
-	TestitAPI4xx(client, req, 400, utils.Err30002()) // OK-ACCESS-SIGN header is required
+	TestitAPI4xx(httpClient, req, 400, utils.Err30002()) // OK-ACCESS-SIGN header is required
 
-	req = BuildNewRequest("POST", url, nil)
+	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	TestitAPI4xx(client, req, 400, utils.Err30003()) // OK-ACCESS-TIMESTAMP header is required
+	TestitAPI4xx(httpClient, req, 400, utils.Err30003()) // OK-ACCESS-TIMESTAMP header is required
 
-	req = BuildNewRequest("POST", url, nil)
+	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
-	TestitAPI4xx(client, req, 400, utils.Err30005()) // Invalid OK-ACCESS-TIMESTAMP
+	TestitAPI4xx(httpClient, req, 400, utils.Err30005()) // Invalid OK-ACCESS-TIMESTAMP
 
 	time.Sleep(1 * time.Second) // limit 6/sec
 
-	req = BuildNewRequest("POST", url, nil)
+	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "2020-01-01T01:01:01.000Z") // expired
-	TestitAPI4xx(client, req, 400, utils.Err30008())                  // Request timestamp expired
+	TestitAPI4xx(httpClient, req, 400, utils.Err30008())              // Request timestamp expired
 
-	req = BuildNewRequest("POST", url, nil)
+	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")
 	req.Header.Add("OK-ACCESS-SIGN", "wrong")
 	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	TestitAPI4xx(client, req, 401, utils.Err30006()) // Invalid OK-ACCESS-KEY
+	TestitAPI4xx(httpClient, req, 401, utils.Err30006()) // Invalid OK-ACCESS-KEY
 
-	req = BuildNewRequest("POST", url, nil)
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	TestitAPI4xx(client, req, 400, utils.Err30007()) // Invalid Content_Type, please use the application/json format
+	if method == "GET" {
+		req = BuildNewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		TestitAPI4xx(httpClient, req, 400, utils.Err30004()) // OK-ACCESS-PASSPHRASE header is required
 
-	// Send body as nil, []byte(""), []byte(``) gives us a 500 error.
+		req = BuildNewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
+		TestitAPI4xx(httpClient, req, 400, utils.Err30015()) // Invalid OK_ACCESS_PASSPHRASE
 
-	body := []byte(`{}`)
-	req = BuildNewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	TestitAPI4xx(client, req, 400, utils.Err30004()) // OK-ACCESS-PASSPHRASE header is required
+		req = BuildNewRequest("GET", url, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
+		TestitAPI4xx(httpClient, req, 401, utils.Err30013()) // Invalid Sign
+	} else { // Assume POST
+		req = BuildNewRequest(method, url, nil)
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		TestitAPI4xx(httpClient, req, 400, utils.Err30007()) // Invalid Content_Type, please use the application/json format
 
-	req = BuildNewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("OK-ACCESS-KEY", credentials.Key)
-	req.Header.Add("OK-ACCESS-SIGN", "wrong")
-	req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
-	req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
-	TestitAPI4xx(client, req, 400, utils.Err30015()) // Invalid OK_ACCESS_PASSPHRASE
+		// Send body as nil, []byte(""), []byte(``) gives us a 500 error.
+
+		body := []byte(`{}`)
+		req = BuildNewRequest(method, url, bytes.NewBuffer(body))
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		TestitAPI4xx(httpClient, req, 400, utils.Err30004()) // OK-ACCESS-PASSPHRASE header is required
+
+		req = BuildNewRequest(method, url, bytes.NewBuffer(body))
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("OK-ACCESS-KEY", credentials.Key)
+		req.Header.Add("OK-ACCESS-SIGN", "wrong")
+		req.Header.Add("OK-ACCESS-TIMESTAMP", time.Now().UTC().Format("2006-01-02T15:04:05.999Z"))
+		req.Header.Add("OK-ACCESS-PASSPHRASE", "wrong")
+		TestitAPI4xx(httpClient, req, 400, utils.Err30015()) // Invalid OK_ACCESS_PASSPHRASE
+	}
 
 }
 

@@ -12,11 +12,11 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 
 	endpoint := "/api/account/v3/withdrawal"
 	url := baseURL + endpoint
-	client := GetHttpClient(baseURL)
+	httpClient := GetHttpClient(baseURL)
 	credentials := getCredentials(credentialsFile)
 
 	if makeErrorsCredentials {
-		TestitStdPOST(client, url, credentials)
+		TestitCredentialsHeadersErrors(httpClient, url, "POST", credentials)
 	}
 
 	// Make a call with valid headers but using the wrong credentials.  Wrong credentials will fail first
@@ -35,7 +35,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
 
-		TestitAPI4xx(client, req, 401, utils.Err30012()) // Invalid authority
+		TestitAPI4xx(httpClient, req, 401, utils.Err30012()) // Invalid authority
 
 	}
 
@@ -43,7 +43,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 		// Now try a variety of parameter errors.  Be sure to use sufficient credentials. These tests will all require a valid signature.
 
 		paramTester := ParamTester{
-			Client:      client,
+			Client:      httpClient,
 			Credentials: credentials,
 			Endpoint:    endpoint,
 			Url:         url,
@@ -73,7 +73,7 @@ func ProbeAccountWithdrawal(baseURL string, credentialsFile string, makeErrorsCr
 		req.Header.Add("OK-ACCESS-SIGN", encoded)
 		req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 		req.Header.Add("OK-ACCESS-PASSPHRASE", credentials.Passphrase)
-		responseBody := TestitAPICore(client, req, 200)
+		responseBody := TestitAPICore(httpClient, req, 200)
 
 		fmt.Println(string(responseBody))
 
