@@ -21,7 +21,24 @@ type ParamTester struct {
 	Url         string
 }
 
-func (pt *ParamTester) testit(body string, expectedErrorMessage utils.OKError) {
+func (pt *ParamTester) GET(queryString string, expectedResponseCode int, expectedErrorMessage utils.OKError) {
+
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
+	//prehash := timestamp + "POST" + pt.Endpoint + body
+	prehash := timestamp + "GET" + pt.Endpoint + queryString
+	encoded, _ := utils.HmacSha256Base64Signer(prehash, pt.Credentials.SecretKey)
+
+	req, _ := http.NewRequest("GET", pt.Url+queryString, nil)
+	req.Header.Add("OK-ACCESS-KEY", pt.Credentials.Key)
+	req.Header.Add("OK-ACCESS-SIGN", encoded)
+	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
+	req.Header.Add("OK-ACCESS-PASSPHRASE", pt.Credentials.Passphrase)
+
+	TestitAPI4xx(pt.Client, req, expectedResponseCode, expectedErrorMessage)
+
+}
+
+func (pt *ParamTester) POST(body string, expectedErrorMessage utils.OKError) {
 
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.999Z")
 	prehash := timestamp + "POST" + pt.Endpoint + body
@@ -79,7 +96,7 @@ func TestitCredentialsHeadersErrors(httpClient *http.Client, url string, method 
 	req.Header.Add("OK-ACCESS-TIMESTAMP", "invalid")
 	TestitAPI4xx(httpClient, req, 400, utils.Err30005()) // Invalid OK-ACCESS-TIMESTAMP
 
-	time.Sleep(1 * time.Second) // limit 6/sec
+	time.Sleep(1 * time.Second) // rate limit throttle
 
 	req = BuildNewRequest(method, url, nil)
 	req.Header.Add("OK-ACCESS-KEY", "wrong")

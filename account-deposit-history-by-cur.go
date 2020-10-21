@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	utils "github.com/bostontrader/okcommon"
 )
 
@@ -20,25 +19,18 @@ as part of the URL or as a query string.  These differences confound the http cl
 We have therefore chosen to deal with this as two separate endpoints.  Please also see account-deposit-history.
 
 */
-func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams bool, currency string) {
+func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, makeErrorsCredentials, makeErrorsParams bool) {
 
-	// 1. Standard prolog.
 	endPoint := "/api/account/v3/deposit/history/"
-
-	// 1.1 Read and parse credentials file
-	credentials := getCredentials(credentialsFile)
-
-	// 1.2 Obtain an http client
 	url := baseURL + endPoint
 	httpClient := GetHttpClient(baseURL)
+	credentials := getCredentials(credentialsFile)
 
-	// 1.3 If we want to test header/credentials errors.
 	if makeErrorsCredentials {
 		TestitCredentialsHeadersErrors(httpClient, url, "GET", credentials)
 	}
 
-	// 2. This probe has an additional parameter that might be wrong.  Test for these errors if requested.
-
+	// This probe has an additional parameter that might be wrong.  Test for these errors if requested.
 	// Recall that in this probe the currency parameter is part of the URL. It's not in the queryString.
 	//var body string
 	if makeErrorsParams {
@@ -57,21 +49,25 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 		TestitAPI4xx(httpClient, req, 400, utils.Err30031(invalidCur))
 	}
 
-	// 3. After we've tried all the errors, it's time to build and submit the final correct request.
-
-	// 3.1 Build a request
-	req := buildGETRequest(credentials, endPoint, queryString, baseURL)
-
-	// 2.2 We expect a 2xx response
-	body1 := TestitAPICore(httpClient, req, 200)
-
-	// 2.3 Ensure that the prior response is parsable.
-	depositHistories := make([]utils.DepositHistory, 0)
-	dec := json.NewDecoder(bytes.NewReader(body1))
-	dec.DisallowUnknownFields()
-	err := dec.Decode(&depositHistories)
-	if err != nil {
-		fmt.Println("Error parsing string into json 2.3: ", err)
-		return
+	// This endpoint is a GET and should always work with any credentials.
+	if makeErrorsWrongCredentialsType {
+		req := buildGETRequest(credentials, endPoint, "", baseURL)
+		TestitAPICore(httpClient, req, 200)
 	}
+
+	if forReal {
+		// Build and execute the request
+		req := buildGETRequest(credentials, endPoint, queryString, baseURL)
+		body := TestitAPICore(httpClient, req, 200)
+
+		// Ensure that the prior response is parsable.
+		depositHistories := make([]utils.DepositHistory, 0)
+		dec := json.NewDecoder(bytes.NewReader(body))
+		dec.DisallowUnknownFields()
+		err := dec.Decode(&depositHistories)
+		isJSONError(body, err)
+
+		println(string(body))
+	}
+
 }

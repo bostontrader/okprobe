@@ -57,7 +57,7 @@ var (
 		Short: "Invoke GET /api/account/v3/deposit/history/<currency>",
 		Long:  `Invoke GET /api/account/v3/deposit/history/<currency>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			ProbeAccountDepositHistoryByCur(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams, currency)
+			ProbeAccountDepositHistoryByCur(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams)
 		},
 	}
 
