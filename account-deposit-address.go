@@ -27,7 +27,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 			Url:         url,
 		}
 
-		paramTester.GET("", 401, utils.Err30023("currency cannot be blank"))
+		paramTester.GET("", 400, utils.Err30023("currency cannot be blank"))
 		paramTester.GET("?currency=catfood", 400, utils.Err30031("catfood"))
 	}
 
