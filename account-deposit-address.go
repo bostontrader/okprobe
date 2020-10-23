@@ -33,7 +33,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 
 	// This endpoint is a GET and should always work with any credentials.
 	if makeErrorsWrongCredentialsType {
-		req := buildGETRequest(credentials, endPoint, "", baseURL)
+		req := buildGETRequest(credentials, endPoint, "?currency=BTC", baseURL)
 		TestitAPICore(httpClient, req, 200)
 	}
 
