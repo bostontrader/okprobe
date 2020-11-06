@@ -46,6 +46,8 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		// queryString = "?limit=" results in 200 and all tx.
 		paramTester.GET("?limit=catfood", 400, utils.Err30025("limit parameter format is error"))
 
+		// queryString = "?before=1000&after=500" results in 200 and no tx because this range omits everything.
+
 	}
 
 	// This endpoint is a GET and should always work with any credentials.
@@ -64,7 +66,7 @@ func ProbeAccountLedger(baseURL string, credentialsFile string, makeErrorsCreden
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&ledgerEntries)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountLedger", body, err)
 
 		println(string(body))
 	}

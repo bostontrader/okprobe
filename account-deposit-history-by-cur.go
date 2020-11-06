@@ -65,7 +65,7 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&depositHistories)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountDepositHistoryByCur", body, err)
 
 		println(string(body))
 	}

@@ -41,5 +41,5 @@ func ProbeSpotAccounts(baseURL string, credentialsFile string, makeErrorsCredent
 		fmt.Println("Error parsing string into json 2.3: ", err)
 		return
 	}
-
+	fmt.Printf("%s\n", body)
 }

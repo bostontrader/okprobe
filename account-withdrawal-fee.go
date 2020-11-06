@@ -44,7 +44,7 @@ func ProbeAccountWithdrawalFee(baseURL string, credentialsFile string, makeError
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&withDrawalFees)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountWithdrawalFee", body, err)
 
 		println(string(body))
 	}

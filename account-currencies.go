@@ -37,7 +37,7 @@ func ProbeAccountCurrencies(baseURL string, credentialsFile string, makeErrorsCr
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&currencyEntries)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountCurrencies", body, err)
 
 		println(string(body))
 	}

@@ -68,9 +68,9 @@ func BuildNewRequest(method string, url string, body io.Reader) *http.Request {
 /* Given a body and an error as returned from JSON.decode, check for an error.  If so, print an error message and os.Exit(1).
 Otherwise just silently go home.
 */
-func isJSONError(body []byte, err error) {
+func isJSONError(methodName string, body []byte, err error) {
 	if err != nil {
-		fmt.Printf("%okprobe:testit.go:isJSONError: JSON decode error: Err=%v\nbody=%s\n", err, body)
+		fmt.Printf("%s: JSON decode error: Err=%v\nbody=%s\n", methodName, err, string(body))
 		os.Exit(1)
 	}
 }

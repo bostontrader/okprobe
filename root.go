@@ -153,7 +153,6 @@ func init() {
 	rootCmd.AddCommand(accountWithdrawalCmd)
 	rootCmd.AddCommand(accountWithdrawalFeeCmd)
 	rootCmd.AddCommand(spotAccountsCmd)
-
 	rootCmd.AddCommand(versionCmd)
 
 }

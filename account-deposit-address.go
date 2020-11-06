@@ -47,7 +47,7 @@ func ProbeAccountDepositAddress(baseURL string, credentialsFile string, makeErro
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&depositAddresses)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountDepositAddress", body, err)
 
 		println(string(body))
 	}

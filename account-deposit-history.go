@@ -36,7 +36,7 @@ func ProbeAccountDepositHistory(baseURL string, credentialsFile string, makeErro
 
 	// This endpoint is a GET and should always work with any credentials.
 	if makeErrorsWrongCredentialsType {
-		req := buildGETRequest(credentials, endPoint, "", baseURL)
+		req := buildGETRequest(credentials, endPoint, queryString, baseURL)
 		TestitAPICore(httpClient, req, 200)
 	}
 
@@ -50,7 +50,7 @@ func ProbeAccountDepositHistory(baseURL string, credentialsFile string, makeErro
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		err := dec.Decode(&depositHistories)
-		isJSONError(body, err)
+		isJSONError("okprobe:account-ledger.go:ProbeAccountDepositHistory", body, err)
 
 		println(string(body))
 	}
