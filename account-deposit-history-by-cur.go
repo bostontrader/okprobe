@@ -40,24 +40,18 @@ func ProbeAccountDepositHistoryByCur(baseURL string, credentialsFile string, mak
 		// 2.2 Request an invalid currency
 		invalidCur := "catfood"
 		req := buildGETRequest(credentials, endPoint+invalidCur, "", baseURL)
-
-		//_, err = TestitAPI4xxOld(httpClient, req, 400, utils.ExpectedResponseHeaders, utils.Err30031(invalidCur))
-		//if err != nil {
-		//fmt.Println("Error with 'currency' param 2.2: ", err)
-		//return
-		//}
 		TestitAPI4xx(httpClient, req, 400, utils.Err30031(invalidCur))
 	}
 
 	// This endpoint is a GET and should always work with any credentials.
 	if makeErrorsWrongCredentialsType {
-		req := buildGETRequest(credentials, endPoint, "", baseURL)
+		req := buildGETRequest(credentials, endPoint+currencySymbol, "", baseURL)
 		TestitAPICore(httpClient, req, 200)
 	}
 
 	if forReal {
 		// Build and execute the request
-		req := buildGETRequest(credentials, endPoint, queryString, baseURL)
+		req := buildGETRequest(credentials, endPoint+currencySymbol, queryString, baseURL)
 		body := TestitAPICore(httpClient, req, 200)
 
 		// Ensure that the prior response is parsable.

@@ -17,7 +17,7 @@ var (
 	queryString                    string
 
 	// For accountDepositHistoryByCurCmd flag
-	currency string
+	currencySymbol string
 
 	rootCmd = &cobra.Command{
 		Use:   "okprobe",
@@ -55,7 +55,7 @@ var (
 	accountDepositHistoryByCurCmd = &cobra.Command{
 		Use:   "accountDepositHistoryByCur",
 		Short: "Invoke GET /api/account/v3/deposit/history/<currency>",
-		Long:  `Invoke GET /api/account/v3/deposit/history/<currency>`,
+		Long:  `Invoke GET /api/account/v3/deposit/history/<currency>  Use --queryString to feed in the desired currency symbol.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ProbeAccountDepositHistoryByCur(baseURL, credentialsFile, makeErrorsCredentials, makeErrorsParams)
 		},
@@ -141,7 +141,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&postBody, "postBody", "", "A string to send to a POST endpoint for use as the request body.  For example: `{\"from\":\"6\", \"to\":\"1\", \"amount\":\"0.1\", \"currency\":\"bsv\"}`  (default empty string)")
 	rootCmd.PersistentFlags().StringVar(&queryString, "queryString", "", "A complete query string to send to a GET endpoint.  For example: '?param1=A&param2=B'  (default empty string)")
 
-	accountDepositHistoryByCurCmd.PersistentFlags().StringVar(&currency, "currency", "", "A currency of interest.'  (default empty string)")
+	accountDepositHistoryByCurCmd.PersistentFlags().StringVar(&currencySymbol, "currencySymbol", "", "A currency of interest.'  (default empty string)")
 
 	rootCmd.AddCommand(accountCurrenciesCmd)
 	rootCmd.AddCommand(accountDepositAddressCmd)
